@@ -1,57 +1,66 @@
 package components
 
 import (
-	"github.com/golang/freetype/truetype"
-	"github.com/hamcha/youi"
-	"golang.org/x/image/font"
-	"golang.org/x/image/font/gofont/goregular"
+	"github.com/hamcha/youi/font"
 )
 
 // Component is a renderable UI component
 type Component interface {
 	Draw()
+	ShouldDraw() bool
+	Parent() *Container
+
+	setParent(*Container)
 }
 
-// componentPosition add position to a component
-type componentPosition struct {
-	x, y          float32
-	dirtyPosition bool
+// componentBase is the common parent of all components
+type componentBase struct {
+	parent *Container
 }
 
-func (c *componentPosition) SetPosition(x, y float32) {
-	c.x = x
-	c.y = y
-	c.dirtyPosition = true
+func (c *componentBase) Parent() *Container {
+	return c.parent
 }
 
-// componentText allows components to have text in them
+func (c *componentBase) setParent(container *Container) {
+	c.parent = container
+}
+
+// componentText is a common parent of all text-based components
 type componentText struct {
-	fontFace *truetype.Font
+	fontFace string
 	fontSize float64
 
-	_font     font.Face
+	_font     *font.Font
 	dirtyFont bool
 }
 
-func (c *componentText) SetFontFace(fnt *truetype.Font) {
-	c.fontFace = fnt
+func (c *componentText) SetFontFace(name string) {
+	c.fontFace = name
 	c.dirtyFont = true
 }
 
 func (c *componentText) SetFontSize(size float64) {
 	c.fontSize = size
-	c.dirtyFont = true
 }
 
 func (c *componentText) makeFace() {
 	if c.dirtyFont {
 		// If no font is provided, use Go Regolar
-		if c.fontFace == nil {
-			c.fontFace, _ = truetype.Parse(goregular.TTF)
+		if c.fontFace == "" {
+			c._font = font.DefaultFont()
+		} else {
+			var err error
+			c._font, err = font.LoadFont(c.fontFace)
+			if err != nil {
+				//TODO Proper error reporting
+				panic(err)
+			}
 		}
-		c._font = truetype.NewFace(c.fontFace, &truetype.Options{
-			Size: c.fontSize,
-			DPI:  youi.SYSDPI,
-		})
+		c.dirtyFont = false
 	}
+}
+
+func (c *componentText) isDirty() bool {
+	return c.dirtyFont
 }
