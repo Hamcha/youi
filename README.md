@@ -23,6 +23,8 @@ Actual support may be affected by which OS drivers are installed.
 
 The code for this project is licensed under the ISC license, full text provided in the `LICENSE` file.
 
-This project uses the go-gl and gltext/freetype library, you can see their licenses in their relative files:
-	- `LICENSE-go-gl` for the [go-gl project](https://github.com/go-gl)
-	- `LICENSE-ftl` for [freetype2](http://freetype.sourceforge.net/index2.html)
+This project depends on third party libraries, you can see their licenses in their relative files:
+
+- `LICENSE-go-gl` for the [go-gl project](https://github.com/go-gl)
+- `LICENSE-ftl` for [freetype2](http://freetype.sourceforge.net/index2.html) and [Freetype-Go](https://github.com/golang/freetype)
+- `LICENSE-texpack` for [texpack](https://github.com/adinfinit/texpack)
