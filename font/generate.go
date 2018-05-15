@@ -18,15 +18,19 @@ const MaxTextureSize = 2048
 // SDFRadius is the search radius for each pixel during the distance fields generation
 const SDFRadius = 4
 
+// DefaultTextureFontSize is the default size used for SDF texture generation
+const DefaultTextureFontSize = 32
+
 var (
+	// ErrFontDoesntFit means the font glyphs don't fit within the maximum texture limit
 	ErrFontDoesntFit = errors.New("font texture doesn't fit within texture size limits")
 )
 
 // Atlas is a dictionary that maps each font glyph to its position on a texture atlas
 type Atlas map[rune]image.Rectangle
 
-// MakeAtlas creates an SDF font atlas from a ttf font
-func MakeAtlas(name string, fnt *truetype.Font, fontSize int) (*image.RGBA, Atlas, error) {
+// MakeFont creates an SDF font atlas from a ttf font
+func MakeFont(fnt *truetype.Font, fontSize int) (*Font, error) {
 	// Create new typeface with specified size
 	face := truetype.NewFace(fnt, &truetype.Options{
 		Size:    float64(fontSize),
@@ -35,11 +39,11 @@ func MakeAtlas(name string, fnt *truetype.Font, fontSize int) (*image.RGBA, Atla
 
 	// Create textpack font struct
 	font := &pack.Font{
-		Name:      name,
 		Font:      fnt,
 		Face:      face,
 		MaxBounds: fnt.Bounds(fixed.I(fontSize)),
 		Glyphs:    make(map[rune]*pack.Glyph, 256),
+		Padding:   SDFRadius / 2,
 		Kern:      make(map[[2]rune]fixed.Int26_6, 256),
 	}
 
@@ -53,7 +57,7 @@ func MakeAtlas(name string, fnt *truetype.Font, fontSize int) (*image.RGBA, Atla
 	// Get best texture size for all boxes
 	size, ok := pack.PlaceBoxes(image.Point{MaxTextureSize, MaxTextureSize}, maxrect.Automatic, boxes)
 	if !ok {
-		return nil, nil, ErrFontDoesntFit
+		return nil, ErrFontDoesntFit
 	}
 
 	// Make output image for font map and draw all glyphs
@@ -69,5 +73,8 @@ func MakeAtlas(name string, fnt *truetype.Font, fontSize int) (*image.RGBA, Atla
 		fontmap[r] = box.Place
 	}
 
-	return dst, fontmap, nil
+	return &Font{
+		Texture: dst,
+		Atlas:   fontmap,
+	}, nil
 }
