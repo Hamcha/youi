@@ -37,8 +37,13 @@ func main() {
 	canvas.AppendChild(&label)
 	canvas.SetBounds(image.Rect(10, 10, 100, 100))
 
+	form := youi.MakeForm(window)
+	form.Root.AppendChild(&canvas)
+
 	for window.IsOpen() {
-		window.Draw()
+		if form.Root.ShouldDraw() {
+			form.Draw()
+		}
 		opengl.Poll()
 	}
 }

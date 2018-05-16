@@ -11,16 +11,6 @@ const SYSDPI = 72 //TODO Support customizable DPI
 
 // Init initializes an OpenGL context
 func Init() error {
-	// Initialize OpenGL
-	err := gl.Init()
-	if err != nil {
-		return err
-	}
-
-	// Setup global properties
-	gl.Enable(gl.DEPTH_TEST)
-	gl.DepthFunc(gl.LESS)
-
 	// Setup GLFW
 	glfw.Init()
 	//TODO Should check for GLFW errors

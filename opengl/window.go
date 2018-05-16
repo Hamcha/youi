@@ -1,8 +1,10 @@
 package opengl
 
 import (
+	"image"
 	"image/color"
 
+	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -34,24 +36,38 @@ func CreateWindow(width, height int, title string, monitor *glfw.Monitor, parent
 	window, err := glfw.CreateWindow(width, height, title, monitor, parentWnd)
 	window.MakeContextCurrent()
 
+	// Initialize OpenGL on the window
+	err = gl.Init()
+	if err != nil {
+		return nil, err
+	}
+
+	// Setup global properties
+	gl.Enable(gl.DEPTH_TEST)
+	gl.DepthFunc(gl.LESS)
+
 	return &Window{
 		handle:  window,
 		options: options,
 	}, err
 }
 
-func (w *Window) Draw() {
-	//TODO Only draw if needed
+func (w *Window) Clear() {
 	if w.options.BackgroundColor != nil {
 		SetBGColor(w.options.BackgroundColor)
 	}
 	Clear()
+}
 
-	//TODO Actually draw something??
-
+func (w *Window) DrawDone() {
 	w.handle.SwapBuffers()
 }
 
 func (w *Window) IsOpen() bool {
 	return !w.handle.ShouldClose()
+}
+
+func (w *Window) GetSize() image.Point {
+	width, height := w.handle.GetSize()
+	return image.Point{width, height}
 }
