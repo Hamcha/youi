@@ -24,7 +24,7 @@ func main() {
 	defer opengl.Terminate()
 
 	window, err := opengl.CreateWindow(640, 480, "Hello world", nil, nil, opengl.WindowOptions{
-		BackgroundColor: youi.HexColor(0xff0000ff),
+		BackgroundColor: youi.HexColor(0x101020ff),
 	})
 	if err != nil {
 		panic(err)
