@@ -31,7 +31,7 @@ func (c *Canvas) SetBounds(rect image.Rectangle) {
 }
 
 func (c *Canvas) ShouldDraw() bool {
-	return c.ContainerBase.isDirty()
+	return c.dirtyBounds || c.ContainerBase.isDirty()
 }
 
 func (c *Canvas) Draw() {
