@@ -1,8 +1,9 @@
-// +build example
+//+build example
 
 package main
 
 import (
+	"image"
 	"runtime"
 
 	"github.com/hamcha/youi"
@@ -23,7 +24,7 @@ func main() {
 	}
 	defer opengl.Terminate()
 
-	window, err := opengl.CreateWindow(640, 480, "Hello world", opengl.WindowOptions{
+	window, err := opengl.CreateWindow(640, 480, "Hello world", nil, nil, opengl.WindowOptions{
 		BackgroundColor: youi.HexColor(0xff0000ff),
 	})
 	if err != nil {
@@ -33,6 +34,10 @@ func main() {
 	label := components.Label{}
 	label.SetFontSize(12)
 	label.SetText("Hello world")
+
+	canvas := components.Canvas{}
+	canvas.AppendChild(&label)
+	canvas.SetBounds(image.Rect(10, 10, 100, 100))
 
 	for window.IsOpen() {
 		window.Draw()

@@ -1,6 +1,8 @@
 package components
 
 import (
+	"image"
+
 	"github.com/hamcha/youi/font"
 )
 
@@ -8,22 +10,40 @@ import (
 type Component interface {
 	Draw()
 	ShouldDraw() bool
-	Parent() *Container
+	Parent() Container
+	Bounds() image.Rectangle
 
-	setParent(*Container)
+	setParent(Container)
+	setBounds(image.Rectangle)
 }
 
 // componentBase is the common parent of all components
 type componentBase struct {
-	parent *Container
+	parent Container
+	bounds image.Rectangle
+
+	dirtyBounds bool
 }
 
-func (c *componentBase) Parent() *Container {
+func (c *componentBase) Parent() Container {
 	return c.parent
 }
 
-func (c *componentBase) setParent(container *Container) {
+func (c *componentBase) setParent(container Container) {
 	c.parent = container
+}
+
+func (c *componentBase) setBounds(rect image.Rectangle) {
+	c.bounds = rect
+	c.dirtyBounds = true
+}
+
+func (c *componentBase) Bounds() image.Rectangle {
+	return c.bounds
+}
+
+func (c *componentBase) isDirty() bool {
+	return c.dirtyBounds
 }
 
 // componentText is a common parent of all text-based components
