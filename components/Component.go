@@ -17,33 +17,37 @@ type Component interface {
 	setBounds(image.Rectangle)
 }
 
-// componentBase is the common parent of all components
-type componentBase struct {
+// ComponentBase is the common parent of all components
+type ComponentBase struct {
 	parent Container
 	bounds image.Rectangle
 
 	dirtyBounds bool
 }
 
-func (c *componentBase) Parent() Container {
+func (c *ComponentBase) Parent() Container {
 	return c.parent
 }
 
-func (c *componentBase) setParent(container Container) {
+func (c *ComponentBase) setParent(container Container) {
 	c.parent = container
 }
 
-func (c *componentBase) setBounds(rect image.Rectangle) {
+func (c *ComponentBase) setBounds(rect image.Rectangle) {
 	c.bounds = rect
 	c.dirtyBounds = true
 }
 
-func (c *componentBase) Bounds() image.Rectangle {
+func (c *ComponentBase) Bounds() image.Rectangle {
 	return c.bounds
 }
 
-func (c *componentBase) isDirty() bool {
+func (c *ComponentBase) isDirty() bool {
 	return c.dirtyBounds
+}
+
+func (c *ComponentBase) clearFlags() {
+	c.dirtyBounds = false
 }
 
 // componentText is a common parent of all text-based components
@@ -83,4 +87,8 @@ func (c *componentText) makeFace() {
 
 func (c *componentText) isDirty() bool {
 	return c.dirtyFont
+}
+
+func (c *componentText) clearFlags() {
+	c.dirtyFont = false
 }

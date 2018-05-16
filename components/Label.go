@@ -2,7 +2,7 @@ package components
 
 // Label is a drawable text label
 type Label struct {
-	componentBase
+	ComponentBase
 	componentText
 
 	content      string

@@ -44,7 +44,7 @@ const (
 var ErrTextureNotBound = errors.New("texture not bound to any texture unit")
 
 // MakeTexture creates an OpenGL texture and returns it, if possible
-func MakeTexture(img image.RGBA, options TextureOptions) *Texture {
+func MakeTexture(img *image.RGBA, options TextureOptions) *Texture {
 	texture := Texture{
 		target: uint32(gl.TEXTURE_2D),
 	}

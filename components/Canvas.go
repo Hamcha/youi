@@ -9,8 +9,8 @@ import (
 // so they will all overlap each other. It is therefore recommended to only put one component
 // inside a Canvas.
 type Canvas struct {
-	componentBase
-	containerBase
+	ComponentBase
+	ContainerBase
 }
 
 func (c *Canvas) SetPosition(position image.Point) {
@@ -31,7 +31,7 @@ func (c *Canvas) SetBounds(rect image.Rectangle) {
 }
 
 func (c *Canvas) ShouldDraw() bool {
-	return c.containerBase.isDirty()
+	return c.ContainerBase.isDirty()
 }
 
 func (c *Canvas) Draw() {
