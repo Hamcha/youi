@@ -2,7 +2,6 @@ package main
 
 import (
 	"image"
-	"log"
 	"runtime"
 
 	"github.com/hamcha/youi"
@@ -25,6 +24,7 @@ func main() {
 
 	window, err := opengl.CreateWindow(640, 480, "Hello world", nil, nil, opengl.WindowOptions{
 		BackgroundColor: youi.HexColor(0x101020ff),
+		Resizable:       true,
 	})
 	if err != nil {
 		panic(err)
@@ -43,7 +43,6 @@ func main() {
 
 	for window.IsOpen() {
 		if form.Root.ShouldDraw() {
-			log.Println("redraw")
 			form.Draw()
 		}
 		opengl.Poll()

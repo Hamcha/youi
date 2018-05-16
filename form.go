@@ -1,6 +1,8 @@
 package youi
 
 import (
+	"image"
+
 	"github.com/hamcha/youi/components"
 	"github.com/hamcha/youi/opengl"
 )
@@ -12,17 +14,24 @@ type Form struct {
 }
 
 func MakeForm(window *opengl.Window) *Form {
-	canvas := &Form{
+	form := &Form{
 		Root:   &components.Canvas{},
 		window: window,
 	}
-	canvas.Root.SetSize(window.GetSize())
+	form.Root.SetSize(window.GetSize())
 
-	return canvas
+	// Set resize callback
+	window.SetResizeCallback(form.onResize)
+
+	return form
 }
 
 func (f *Form) Draw() {
 	f.window.Clear()
 	f.Root.Draw()
 	f.window.DrawDone()
+}
+
+func (f *Form) onResize(width, height int) {
+	f.Root.SetSize(image.Point{width, height})
 }

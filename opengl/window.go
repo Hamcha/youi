@@ -1,6 +1,7 @@
 package opengl
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 
@@ -42,6 +43,9 @@ func CreateWindow(width, height int, title string, monitor *glfw.Monitor, parent
 		return nil, err
 	}
 
+	version := gl.GoStr(gl.GetString(gl.VERSION))
+	fmt.Println("OpenGL version", version)
+
 	// Setup global properties
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LESS)
@@ -70,4 +74,12 @@ func (w *Window) IsOpen() bool {
 func (w *Window) GetSize() image.Point {
 	width, height := w.handle.GetSize()
 	return image.Point{width, height}
+}
+
+type WindowResizeCallback func(width, height int)
+
+func (w *Window) SetResizeCallback(fn WindowResizeCallback) {
+	w.handle.SetFramebufferSizeCallback(func(w *glfw.Window, width, height int) {
+		fn(width, height)
+	})
 }
