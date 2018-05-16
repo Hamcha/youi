@@ -46,7 +46,7 @@ func (c *ComponentBase) isDirty() bool {
 	return c.dirtyBounds
 }
 
-func (c *ComponentBase) clearFlags() {
+func (c *ComponentBase) ClearFlags() {
 	c.dirtyBounds = false
 }
 
@@ -89,6 +89,6 @@ func (c *componentText) isDirty() bool {
 	return c.dirtyFont
 }
 
-func (c *componentText) clearFlags() {
+func (c *componentText) ClearFlags() {
 	c.dirtyFont = false
 }

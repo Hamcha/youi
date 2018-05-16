@@ -36,10 +36,16 @@ func (c *Canvas) ShouldDraw() bool {
 
 func (c *Canvas) Draw() {
 	c.drawChildren()
+	c.ClearFlags()
 }
 
 func (c *Canvas) resizeChildren() {
 	for _, child := range c.children {
 		child.setBounds(c.bounds)
 	}
+}
+
+func (c *Canvas) ClearFlags() {
+	c.ComponentBase.ClearFlags()
+	c.ContainerBase.ClearFlags()
 }

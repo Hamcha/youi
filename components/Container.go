@@ -38,6 +38,10 @@ func (c *ContainerBase) isDirty() bool {
 	return c.dirtyChildren
 }
 
+func (c *ContainerBase) ClearFlags() {
+	c.dirtyChildren = false
+}
+
 // AppendChild adds a component at the end of the list
 func (c *ContainerBase) AppendChild(component Component) {
 	c.children = append(c.children, component)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"image"
+	"log"
 	"runtime"
 
 	"github.com/hamcha/youi"
@@ -42,6 +43,7 @@ func main() {
 
 	for window.IsOpen() {
 		if form.Root.ShouldDraw() {
+			log.Println("redraw")
 			form.Draw()
 		}
 		opengl.Poll()

@@ -36,10 +36,10 @@ func (i *Image) Draw() {
 
 	//TODO
 
-	i.clearFlags()
+	i.ClearFlags()
 }
 
-func (i *Image) clearFlags() {
-	i.ComponentBase.clearFlags()
+func (i *Image) ClearFlags() {
+	i.ComponentBase.ClearFlags()
 	i.dirtyContent = false
 }
