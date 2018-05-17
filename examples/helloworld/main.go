@@ -2,6 +2,7 @@ package main
 
 import (
 	"image"
+	"image/draw"
 	"runtime"
 
 	"github.com/hamcha/youi"
@@ -30,12 +31,19 @@ func main() {
 		panic(err)
 	}
 
-	label := components.Label{}
-	label.SetFontSize(12)
-	label.SetText("Hello world")
+	//label := components.Label{}
+	//label.SetFontSize(12)
+	//label.SetText("Hello world")
+
+	imgdata := image.NewRGBA(image.Rect(0, 0, 10, 10))
+	draw.Draw(imgdata, imgdata.Bounds(), &image.Uniform{youi.HexColor(0x00ff00ff)}, image.ZP, draw.Src)
+
+	img := components.Image{}
+	img.SetImage(imgdata)
 
 	canvas := components.Canvas{}
-	canvas.AppendChild(&label)
+	//canvas.AppendChild(&label)
+	canvas.AppendChild(&img)
 	canvas.SetBounds(image.Rect(10, 10, 100, 100))
 
 	form := youi.MakeForm(window)
