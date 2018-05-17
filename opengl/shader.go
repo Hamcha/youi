@@ -6,12 +6,14 @@ import (
 	"strings"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 // Shader errors
 var (
 	ErrMissingVertexShader   = errors.New("vertex shader is missing")
 	ErrMissingFragmentShader = errors.New("fragment shader is missing")
+	ErrUniformInvalidType    = errors.New("uniform set value is not of a valid/supported type")
 )
 
 // Shader is a OpenGL program with one vertex and one fragment shader
@@ -19,7 +21,15 @@ type Shader struct {
 	fragID, vertID uint32
 	programID      uint32
 
+	uniforms map[string]*Uniform
+
 	output *uint8
+}
+
+func MakeShader() *Shader {
+	return &Shader{
+		uniforms: make(map[string]*Uniform),
+	}
 }
 
 // SetFragmentSource sets (and updates) the fragment portion of the shader
@@ -109,14 +119,16 @@ func (s *Shader) Use() {
 }
 
 func (s *Shader) BindUniforms() {
-	//TODO
+	for _, uniform := range s.uniforms {
+		uniform.Bind()
+	}
 
 	// Bind output
 	gl.BindFragDataLocation(s.programID, 0, s.output)
 }
 
 func (s *Shader) SetOutput(out string) {
-	s.output = gl.Str(out + "\x00")
+	s.output = glString(out)
 }
 
 func (s *Shader) compileProgram() error {
@@ -174,7 +186,7 @@ func setShader(src string, shaderType uint32) (uint32, error) {
 
 // DefaultShader returns a plain, kinda useless, shader
 func DefaultShader() *Shader {
-	shader := new(Shader)
+	shader := MakeShader()
 
 	err := shader.SetVertexSource(DefaultVertexShader)
 	if err != nil {
@@ -188,6 +200,11 @@ func DefaultShader() *Shader {
 		panic(err)
 	}
 
+	// Init transform uniform to
+	transform := mgl32.Ident4()
+	shader.GetUniform("transform").Set(transform)
+
+	// Set output color
 	shader.SetOutput("color")
 
 	return shader
@@ -196,6 +213,7 @@ func DefaultShader() *Shader {
 // DefaultVertexShader is the vertex portion of the default shader
 const DefaultVertexShader = `
 #version 330 core
+uniform mat4 transform;
 in vec3 vert;
 in vec2 vertTexCoord;
 out vec2 fragTexCoord;
@@ -203,7 +221,7 @@ out vec2 position;
 void main() {
 	fragTexCoord = vertTexCoord;
 	position = vert.xy;
-	gl_Position = vec4(vert, 1);
+	gl_Position = transform * vec4(vert, 1);
 }
 ` + "\x00"
 
@@ -218,3 +236,99 @@ void main() {
     color = vec4(pos.x,pos.y,1.0,1.0);
 }
 ` + "\x00"
+
+// GetUniform returns the uniform value for a given shader uniform variable
+func (s *Shader) GetUniform(str string) *Uniform {
+	if uid, ok := s.uniforms[str]; ok {
+		return uid
+	}
+	s.uniforms[str] = &Uniform{
+		id: gl.GetUniformLocation(s.MustGetProgram(), glString(str)),
+	}
+	return s.uniforms[str]
+}
+
+// Uniform is a modifiable input for shaders
+type Uniform struct {
+	id    int32
+	value interface{}
+}
+
+// Set sets the value for the uniform that will applied when bound
+func (u *Uniform) Set(value interface{}) {
+	u.value = value
+}
+
+// Bind binds the current value to the current program
+func (u *Uniform) Bind() {
+	switch value := u.value.(type) {
+	case uint32:
+		gl.Uniform1ui(u.id, value)
+	case []uint32:
+		switch len(value) {
+		case 1:
+			gl.Uniform1uiv(u.id, 1, &value[0])
+		case 2:
+			gl.Uniform2uiv(u.id, 2, &value[0])
+		case 3:
+			gl.Uniform3uiv(u.id, 3, &value[0])
+		case 4:
+			gl.Uniform4uiv(u.id, 4, &value[0])
+		default:
+			panic(ErrUniformInvalidType)
+		}
+	case int32:
+		gl.Uniform1i(u.id, value)
+	case []int32:
+		switch len(value) {
+		case 1:
+			gl.Uniform1iv(u.id, 1, &value[0])
+		case 2:
+			gl.Uniform2iv(u.id, 2, &value[0])
+		case 3:
+			gl.Uniform3iv(u.id, 3, &value[0])
+		case 4:
+			gl.Uniform4iv(u.id, 4, &value[0])
+		default:
+			panic(ErrUniformInvalidType)
+		}
+	case float32:
+		gl.Uniform1f(u.id, value)
+	case []float32:
+		switch len(value) {
+		case 1:
+			gl.Uniform1fv(u.id, 1, &value[0])
+		case 2:
+			gl.Uniform2fv(u.id, 2, &value[0])
+		case 3:
+			gl.Uniform3fv(u.id, 3, &value[0])
+		case 4:
+			gl.Uniform4fv(u.id, 4, &value[0])
+		default:
+			panic(ErrUniformInvalidType)
+		}
+	case float64:
+		gl.Uniform1d(u.id, value)
+	case []float64:
+		switch len(value) {
+		case 1:
+			gl.Uniform1dv(u.id, 1, &value[0])
+		case 2:
+			gl.Uniform2dv(u.id, 2, &value[0])
+		case 3:
+			gl.Uniform3dv(u.id, 3, &value[0])
+		case 4:
+			gl.Uniform4dv(u.id, 4, &value[0])
+		default:
+			panic(ErrUniformInvalidType)
+		}
+	case mgl32.Mat2:
+		gl.UniformMatrix2fv(u.id, 1, false, &value[0])
+	case mgl32.Mat3:
+		gl.UniformMatrix3fv(u.id, 1, false, &value[0])
+	case mgl32.Mat4:
+		gl.UniformMatrix4fv(u.id, 1, false, &value[0])
+	default:
+		panic(ErrUniformInvalidType)
+	}
+}
