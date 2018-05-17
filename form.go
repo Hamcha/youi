@@ -15,7 +15,7 @@ type Form struct {
 
 func MakeForm(window *opengl.Window) *Form {
 	form := &Form{
-		Root:   &components.Canvas{},
+		Root:   new(components.Canvas),
 		window: window,
 	}
 	form.Root.SetSize(window.GetSize())

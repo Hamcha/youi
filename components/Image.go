@@ -21,7 +21,7 @@ func (i *Image) SetImage(img *image.RGBA) {
 }
 
 func (i *Image) ShouldDraw() bool {
-	return i.dirtyContent || i.ComponentBase.isDirty()
+	return i.dirtyContent || i.ComponentBase.ShouldDraw()
 }
 
 func (i *Image) Draw() {
@@ -36,10 +36,9 @@ func (i *Image) Draw() {
 
 	i.ComponentDrawable.Draw()
 
-	i.ClearFlags()
+	i.clearFlags()
 }
 
-func (i *Image) ClearFlags() {
-	i.ComponentBase.ClearFlags()
+func (i *Image) clearFlags() {
 	i.dirtyContent = false
 }

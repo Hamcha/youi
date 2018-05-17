@@ -9,6 +9,7 @@ type Container interface {
 	Component
 
 	Children() ComponentList
+	Root() Container
 }
 
 // ComponentList is a modifiable, ordered list of components
@@ -16,8 +17,9 @@ type ComponentList []Component
 
 // ContainerBase is the common parent of all container components
 type ContainerBase struct {
-	children ComponentList
+	ComponentBase
 
+	children      ComponentList
 	dirtyChildren bool
 }
 
@@ -38,13 +40,30 @@ func (c *ContainerBase) isDirty() bool {
 	return c.dirtyChildren
 }
 
-func (c *ContainerBase) ClearFlags() {
+func (c *ContainerBase) clearFlags() {
 	c.dirtyChildren = false
+}
+
+func (c *ContainerBase) Root() Container {
+	if c.parent == nil {
+		return c
+	}
+	return c.parent.Root()
+}
+
+func (c *ContainerBase) ShouldDraw() bool {
+	return c.isDirty()
+}
+
+func (c *ContainerBase) Draw() {
+	c.drawChildren()
+	c.clearFlags()
 }
 
 // AppendChild adds a component at the end of the list
 func (c *ContainerBase) AppendChild(component Component) {
 	c.children = append(c.children, component)
+	component.setParent(c)
 	c.dirtyChildren = true
 }
 
@@ -54,6 +73,7 @@ func (c *ContainerBase) InsertChild(component Component, index int) error {
 		return ErrIndexOutOfBounds
 	}
 	c.children = append(c.children[:index], append(ComponentList{component}, c.children[index:]...)...)
+	component.setParent(c)
 	c.dirtyChildren = true
 	return nil
 }
@@ -61,6 +81,7 @@ func (c *ContainerBase) InsertChild(component Component, index int) error {
 // PrependChild inserts a component at the beginning of the list
 func (c *ContainerBase) PrependChild(component Component) {
 	c.children = append(ComponentList{component}, c.children...)
+	component.setParent(c)
 	c.dirtyChildren = true
 }
 

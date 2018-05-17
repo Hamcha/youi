@@ -2,7 +2,7 @@ package components
 
 // Label is a drawable text label
 type Label struct {
-	ComponentBase
+	ComponentDrawable
 	componentText
 
 	content      string
@@ -17,10 +17,18 @@ func (l *Label) SetText(str string) {
 
 // Draw draws the label on screen
 func (l *Label) Draw() {
+	//TODO
 
+	l.ComponentDrawable.Draw()
+	l.componentText.Draw()
+	l.clearFlags()
+}
+
+func (l *Label) clearFlags() {
+	l.dirtyContent = false
 }
 
 // ShouldDraw returns whether the label needs to be re-drawn
 func (l *Label) ShouldDraw() bool {
-	return l.dirtyContent || l.componentText.isDirty()
+	return l.dirtyContent || l.componentText.ShouldDraw()
 }

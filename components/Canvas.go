@@ -9,7 +9,6 @@ import (
 // so they will all overlap each other. It is therefore recommended to only put one component
 // inside a Canvas.
 type Canvas struct {
-	ComponentBase
 	ContainerBase
 }
 
@@ -35,17 +34,16 @@ func (c *Canvas) ShouldDraw() bool {
 }
 
 func (c *Canvas) Draw() {
-	c.drawChildren()
-	c.ClearFlags()
+	c.ContainerBase.Draw()
+	c.clearFlags()
+}
+
+func (c *Canvas) clearFlags() {
+	c.dirtyBounds = false
 }
 
 func (c *Canvas) resizeChildren() {
 	for _, child := range c.children {
 		child.setBounds(c.bounds)
 	}
-}
-
-func (c *Canvas) ClearFlags() {
-	c.ComponentBase.ClearFlags()
-	c.ContainerBase.ClearFlags()
 }

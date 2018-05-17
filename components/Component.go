@@ -43,12 +43,20 @@ func (c *ComponentBase) Bounds() image.Rectangle {
 	return c.bounds
 }
 
-func (c *ComponentBase) isDirty() bool {
+func (c *ComponentBase) Draw() {
+	c.clearFlags()
+}
+
+func (c *ComponentBase) ShouldDraw() bool {
 	return c.dirtyBounds
 }
 
-func (c *ComponentBase) ClearFlags() {
+func (c *ComponentBase) clearFlags() {
 	c.dirtyBounds = false
+}
+
+func (c *ComponentBase) root() Container {
+	return c.parent.Root()
 }
 
 // componentText is a common parent of all text-based components
@@ -70,28 +78,32 @@ func (c *componentText) SetFontSize(size float64) {
 }
 
 func (c *componentText) makeFace() {
-	if c.dirtyFont {
-		// If no font is provided, use Go Regolar
-		if c.fontFace == "" {
-			c._font = font.DefaultFont()
-		} else {
-			var err error
-			c._font, err = font.LoadFont(c.fontFace)
-			if err != nil {
-				//TODO Proper error reporting
-				panic(err)
-			}
+	// If no font is provided, use Go Regolar
+	if c.fontFace == "" {
+		c._font = font.DefaultFont()
+	} else {
+		var err error
+		c._font, err = font.LoadFont(c.fontFace)
+		if err != nil {
+			//TODO Proper error reporting
+			panic(err)
 		}
-		c.dirtyFont = false
 	}
 }
 
-func (c *componentText) isDirty() bool {
+func (c *componentText) ShouldDraw() bool {
 	return c.dirtyFont
 }
 
-func (c *componentText) ClearFlags() {
+func (c *componentText) clearFlags() {
 	c.dirtyFont = false
+}
+
+func (c *componentText) Draw() {
+	if c.dirtyFont {
+		c.makeFace()
+		c.clearFlags()
+	}
 }
 
 type ComponentDrawable struct {
