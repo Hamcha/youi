@@ -8,7 +8,7 @@ import (
 
 // Image is a simple box that can contain an image or any sort of drawable surface
 type Image struct {
-	ComponentBase
+	ComponentDrawable
 
 	content      *image.RGBA
 	dirtyContent bool
@@ -34,7 +34,7 @@ func (i *Image) Draw() {
 		})
 	}
 
-	//TODO
+	i.ComponentDrawable.Draw()
 
 	i.ClearFlags()
 }

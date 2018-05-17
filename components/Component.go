@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/hamcha/youi/font"
+	"github.com/hamcha/youi/opengl"
 )
 
 // Component is a renderable UI component
@@ -91,4 +92,17 @@ func (c *componentText) isDirty() bool {
 
 func (c *componentText) ClearFlags() {
 	c.dirtyFont = false
+}
+
+type ComponentDrawable struct {
+	ComponentBase
+	quad   *opengl.Quad
+	shader *opengl.Shader
+}
+
+func (c *ComponentDrawable) Draw() {
+	if c.quad == nil {
+		c.quad = opengl.MakeQuad(c.shader)
+	}
+	c.quad.Draw()
 }
