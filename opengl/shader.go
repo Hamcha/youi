@@ -200,8 +200,6 @@ func DefaultShader() *Shader {
 		panic(err)
 	}
 
-	// Setup resolution uniform
-
 	// Init transform uniform to identity
 	transform := mgl32.Ident4()
 	shader.GetUniform("transform").Set(transform)
@@ -216,7 +214,6 @@ func DefaultShader() *Shader {
 const DefaultVertexShader = `
 #version 330 core
 uniform mat4 transform;
-uniform mat4 resolution;
 in vec3 vert;
 in vec2 vertTexCoord;
 out vec2 fragTexCoord;
@@ -224,7 +221,7 @@ out vec2 position;
 void main() {
 	fragTexCoord = vertTexCoord;
 	position = vert.xy;
-	gl_Position = transform * resolution * vec4(vert, 1);
+	gl_Position = transform * vec4(vert, 1);
 }
 ` + "\x00"
 
