@@ -43,7 +43,9 @@ func CreateWindow(width, height int, title string, monitor *glfw.Monitor, parent
 		return nil, err
 	}
 
+	renderer := gl.GoStr(gl.GetString(gl.RENDERER))
 	version := gl.GoStr(gl.GetString(gl.VERSION))
+	fmt.Println("Renderer:", renderer)
 	fmt.Println("OpenGL version", version)
 
 	// Setup global properties
