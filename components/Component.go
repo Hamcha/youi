@@ -3,6 +3,8 @@ package components
 import (
 	"image"
 
+	"github.com/go-gl/mathgl/mgl32"
+
 	"github.com/hamcha/youi/font"
 	"github.com/hamcha/youi/opengl"
 )
@@ -114,7 +116,39 @@ type ComponentDrawable struct {
 
 func (c *ComponentDrawable) Draw() {
 	if c.quad == nil {
+		c.shader = opengl.DefaultShader()
 		c.quad = opengl.MakeQuad(c.shader)
 	}
+
+	// Check if bounds have changed
+	if c.dirtyBounds {
+		// Update transform matrix
+		c.updateTransformMatrix()
+	}
+
 	c.quad.Draw()
+	c.ComponentBase.Draw()
+}
+
+func (c *ComponentDrawable) updateTransformMatrix() {
+	// Get window resolution
+	res := c.root().Bounds().Size()
+
+	// Start from identity
+	id := mgl32.Ident4()
+
+	// Move to coordinate
+	position := mgl32.Translate3D(float32(c.bounds.Min.X), float32(c.bounds.Min.Y), 1.0)
+
+	// Scale to size
+	size := mgl32.Scale3D(float32(c.bounds.Max.X), float32(c.bounds.Max.Y), 1.0)
+
+	// Divide by resolution
+	resolution := mgl32.Scale3D(1.0/float32(res.X), 1.0/float32(res.Y), 1.0)
+
+	// Multiply everything into a transform matrix
+	result := id.Mul4(position).Mul4(size).Mul4(resolution)
+
+	// Set result matrix as uniform value
+	c.shader.GetUniform("transform").Set(result)
 }
