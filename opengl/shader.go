@@ -26,6 +26,7 @@ type Shader struct {
 	output *uint8
 }
 
+// MakeShader creates a shader object
 func MakeShader() *Shader {
 	return &Shader{
 		uniforms: make(map[string]*Uniform),
@@ -114,10 +115,12 @@ func (s *Shader) MustGetProgram() uint32 {
 	return out
 }
 
+// Use sets the shader program as active
 func (s *Shader) Use() {
 	gl.UseProgram(s.programID)
 }
 
+// BindUniforms sets all the uniforms to their current set value
 func (s *Shader) BindUniforms() {
 	for _, uniform := range s.uniforms {
 		uniform.Bind()
@@ -127,6 +130,7 @@ func (s *Shader) BindUniforms() {
 	gl.BindFragDataLocation(s.programID, 0, s.output)
 }
 
+// SetOutput sets the shader color output variable
 func (s *Shader) SetOutput(out string) {
 	s.output = glString(out)
 }
@@ -217,10 +221,8 @@ uniform mat4 transform;
 in vec3 vert;
 in vec2 vertTexCoord;
 out vec2 fragTexCoord;
-out vec2 position;
 void main() {
 	fragTexCoord = vertTexCoord;
-	position = vert.xy;
 	gl_Position = transform * vec4(vert, 1);
 }
 ` + "\x00"
@@ -229,11 +231,9 @@ void main() {
 const DefaultFragmentShader = `
 #version 330 core
 in vec2 fragTexCoord;
-in vec2 position;
 out vec4 color;
 void main() {
-	vec2 pos = position.xy / fragTexCoord.xy;
-    color = vec4(pos.x,pos.y,1.0,1.0);
+    color = vec4(fragTexCoord.xy,1.0,1.0);
 }
 ` + "\x00"
 
@@ -242,8 +242,14 @@ func (s *Shader) GetUniform(str string) *Uniform {
 	if uid, ok := s.uniforms[str]; ok {
 		return uid
 	}
+
+	uniform := gl.GetUniformLocation(s.MustGetProgram(), glString(str))
+	if uniform < 0 {
+		panic(fmt.Errorf("glGetUniformLocation returned -1, GL error: %d", gl.GetError()))
+	}
+
 	s.uniforms[str] = &Uniform{
-		id: gl.GetUniformLocation(s.MustGetProgram(), glString(str)),
+		id: uniform,
 	}
 	return s.uniforms[str]
 }
@@ -328,6 +334,12 @@ func (u *Uniform) Bind() {
 		gl.UniformMatrix3fv(u.id, 1, false, &value[0])
 	case mgl32.Mat4:
 		gl.UniformMatrix4fv(u.id, 1, false, &value[0])
+	case *Texture:
+		value.Bind(0) //TODO support multiple textures per-shader
+		err := value.SetUniform(u.id)
+		if err != nil {
+			panic(err)
+		}
 	default:
 		panic(ErrUniformInvalidType)
 	}

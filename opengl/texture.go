@@ -10,7 +10,6 @@ import (
 // Texture is a single OpenGL texture
 type Texture struct {
 	handle uint32
-	target uint32
 	unit   uint32
 }
 
@@ -41,55 +40,57 @@ const (
 	TextureFilterLinear  TextureFilter = gl.LINEAR
 )
 
-var ErrTextureNotBound = errors.New("texture not bound to any texture unit")
+// Texture errors
+var (
+	ErrTextureNotBound = errors.New("texture not bound to any texture unit")
+)
 
 // MakeTexture creates an OpenGL texture and returns it, if possible
 func MakeTexture(img *image.RGBA, options TextureOptions) *Texture {
-	texture := Texture{
-		target: uint32(gl.TEXTURE_2D),
-	}
+	texture := new(Texture)
 
 	// Generate texture handle
 	gl.GenTextures(1, &texture.handle)
 
 	// Bind texture to set up stuff
-	texture.Bind(gl.TEXTURE0)
+	texture.Bind(0)
 	defer texture.Unbind()
 
 	// Set wrap types
 	if options.WrapR != 0 {
-		gl.TexParameteri(texture.target, gl.TEXTURE_WRAP_R, int32(options.WrapR))
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_R, int32(options.WrapR))
 	}
 	if options.WrapS != 0 {
-		gl.TexParameteri(texture.target, gl.TEXTURE_WRAP_R, int32(options.WrapS))
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_R, int32(options.WrapS))
 	}
 
 	// Set filtering
 	if options.MinFilter != 0 {
-		gl.TexParameteri(texture.target, gl.TEXTURE_MIN_FILTER, int32(options.MinFilter))
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, int32(options.MinFilter))
 	}
 	if options.MagFilter != 0 {
-		gl.TexParameteri(texture.target, gl.TEXTURE_MAG_FILTER, int32(options.MagFilter))
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, int32(options.MagFilter))
 	}
 
 	width := int32(img.Rect.Size().X)
 	height := int32(img.Rect.Size().Y)
-	gl.TexImage2D(texture.target, 0, gl.SRGB_ALPHA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(img.Pix))
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(img.Pix))
 
-	return &texture
+	return texture
 }
 
 // Bind binds the texture to a hardware texture unit
 func (t *Texture) Bind(unit uint32) {
-	gl.ActiveTexture(unit)
-	gl.BindTexture(t.target, t.handle)
-	t.unit = unit
+	t.unit = gl.TEXTURE0 + unit
+	gl.ActiveTexture(t.unit)
+	gl.BindTexture(gl.TEXTURE_2D, t.handle)
 }
 
 // Unbind removes the texture from its current texture unit
 func (t *Texture) Unbind() {
-	gl.BindTexture(t.target, 0)
+	gl.ActiveTexture(t.unit)
 	t.unit = 0
+	gl.BindTexture(gl.TEXTURE_2D, t.unit)
 }
 
 // SetUniform sets the texture as uniform for a GL program

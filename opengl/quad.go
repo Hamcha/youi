@@ -4,21 +4,23 @@ import "github.com/go-gl/gl/v3.3-core/gl"
 
 var quadVertices = []float32{
 	// Triangle 1
-	-1, -1, 0, 0, 0,
-	-1, 1, 0, 0, 1,
-	1, 1, 0, 1, 1,
+	-1, -1, 0, 0, 1,
+	-1, 1, 0, 0, 0,
+	1, 1, 0, 1, 0,
 	// Triangle 2
-	-1, -1, 0, 0, 0,
-	1, -1, 0, 1, 0,
-	1, 1, 0, 1, 1,
+	-1, -1, 0, 0, 1,
+	1, -1, 0, 1, 1,
+	1, 1, 0, 1, 0,
 }
 
+// Quad is a simple rectangle mesh made of two triangles
 type Quad struct {
 	vao    uint32
 	vbo    uint32
 	Shader *Shader
 }
 
+// MakeQuad creates a quad with either a provided shader or a default one
 func MakeQuad(shader *Shader) *Quad {
 	quad := new(Quad)
 
@@ -41,17 +43,18 @@ func MakeQuad(shader *Shader) *Quad {
 	gl.BufferData(gl.ARRAY_BUFFER, len(quadVertices)*4, gl.Ptr(quadVertices), gl.STATIC_DRAW)
 
 	// Setup shader uniforms
-	vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vert\x00")))
+	vertAttrib := uint32(gl.GetAttribLocation(program, glString("vert")))
 	gl.EnableVertexAttribArray(vertAttrib)
 	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
 
-	texCoordAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vertTexCoord\x00")))
+	texCoordAttrib := uint32(gl.GetAttribLocation(program, glString("vertTexCoord")))
 	gl.EnableVertexAttribArray(texCoordAttrib)
 	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
 
 	return quad
 }
 
+// Draw sets the quad's shader and draws it
 func (q *Quad) Draw() {
 	// Load shader
 	q.Shader.MustGetProgram() // Make sure it's updated
@@ -62,9 +65,6 @@ func (q *Quad) Draw() {
 
 	// Bind VAO
 	gl.BindVertexArray(q.vao)
-
-	// Bind textures
-	//TODO
 
 	// Draw vertices
 	gl.DrawArrays(gl.TRIANGLES, 0, 6*2*3)
