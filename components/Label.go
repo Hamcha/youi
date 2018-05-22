@@ -21,10 +21,10 @@ func (l *Label) Draw() {
 
 	l.ComponentDrawable.Draw()
 	l.componentText.Draw()
-	l.clearFlags()
+	l.ClearFlags()
 }
 
-func (l *Label) clearFlags() {
+func (l *Label) ClearFlags() {
 	l.dirtyContent = false
 }
 

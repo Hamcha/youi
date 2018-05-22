@@ -1,8 +1,6 @@
 package components
 
 import (
-	"image"
-
 	"github.com/go-gl/mathgl/mgl32"
 
 	"github.com/hamcha/youi/font"
@@ -14,16 +12,16 @@ type Component interface {
 	Draw()
 	ShouldDraw() bool
 	Parent() Container
-	Bounds() image.Rectangle
+	Bounds() Bounds
+	SetBounds(Bounds)
 
 	setParent(Container)
-	setBounds(image.Rectangle)
 }
 
 // ComponentBase is the common parent of all components
 type ComponentBase struct {
 	parent Container
-	bounds image.Rectangle
+	bounds Bounds
 
 	dirtyBounds bool
 }
@@ -36,24 +34,28 @@ func (c *ComponentBase) setParent(container Container) {
 	c.parent = container
 }
 
-func (c *ComponentBase) setBounds(rect image.Rectangle) {
-	c.bounds = rect
+func (c *ComponentBase) SetBounds(bounds Bounds) {
+	c.bounds = bounds
 	c.dirtyBounds = true
 }
 
-func (c *ComponentBase) Bounds() image.Rectangle {
+func (c *ComponentBase) Bounds() Bounds {
 	return c.bounds
 }
 
 func (c *ComponentBase) Draw() {
-	c.clearFlags()
+	c.ClearFlags()
 }
 
 func (c *ComponentBase) ShouldDraw() bool {
 	return c.dirtyBounds
 }
 
-func (c *ComponentBase) clearFlags() {
+func (c *ComponentBase) SetRedraw() {
+	c.dirtyBounds = true
+}
+
+func (c *ComponentBase) ClearFlags() {
 	c.dirtyBounds = false
 }
 
@@ -97,14 +99,14 @@ func (c *componentText) ShouldDraw() bool {
 	return c.dirtyFont
 }
 
-func (c *componentText) clearFlags() {
+func (c *componentText) ClearFlags() {
 	c.dirtyFont = false
 }
 
 func (c *componentText) Draw() {
 	if c.dirtyFont {
 		c.makeFace()
-		c.clearFlags()
+		c.ClearFlags()
 	}
 }
 
@@ -115,8 +117,10 @@ type ComponentDrawable struct {
 }
 
 func (c *ComponentDrawable) Draw() {
-	if c.quad == nil {
+	if c.shader == nil {
 		c.shader = opengl.DefaultShader()
+	}
+	if c.quad == nil {
 		c.quad = opengl.MakeQuad(c.shader)
 	}
 
@@ -131,19 +135,21 @@ func (c *ComponentDrawable) Draw() {
 }
 
 func (c *ComponentDrawable) updateTransformMatrix() {
-	// Move to coordinate
-	posMtx := mgl32.Translate3D(float32(c.bounds.Min.X), float32(c.bounds.Min.Y), 0.0)
+	// Get size and position
+	size := c.bounds.Size
+	pos := c.bounds.Position
+
+	// Change pivot to top-left instead of center
+	pos = Position{pos.X + size.Width/2, pos.Y + size.Height/2}
+
+	// Set position, taking into account OpenGL's weird coordinate system
+	posMtx := mgl32.Translate3D((pos.X*2)-1, -(pos.Y*2)+1, 0.0)
 
 	// Scale to size
-	size := c.bounds.Size()
-	sizeMtx := mgl32.Scale3D(float32(size.X), float32(size.Y), 1.0)
-
-	// Divide by resolution
-	res := c.root().Bounds().Size()
-	resMtx := mgl32.Scale3D(1.0/float32(res.X), 1.0/float32(res.Y), 1.0)
+	sizeMtx := mgl32.Scale3D(size.Width, size.Height, 1.0)
 
 	// Multiply everything into a transform matrix
-	result := resMtx.Mul4(posMtx).Mul4(sizeMtx)
+	result := posMtx.Mul4(sizeMtx)
 
 	// Set result matrix as uniform value
 	c.shader.GetUniform("transform").Set(result)

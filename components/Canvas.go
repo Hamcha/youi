@@ -10,40 +10,56 @@ import (
 // inside a Canvas.
 type Canvas struct {
 	ContainerBase
+
+	canvasBounds image.Rectangle
 }
 
 func (c *Canvas) SetPosition(position image.Point) {
-	c.bounds.Min = position
-	c.dirtyBounds = true
-	c.resizeChildren()
+	c.canvasBounds.Min = position
+	c.SetBounds(c.bounds)
 }
 
 func (c *Canvas) SetSize(size image.Point) {
-	c.bounds.Max = c.bounds.Min.Add(size)
-	c.dirtyBounds = true
-	c.resizeChildren()
+	c.canvasBounds.Max = c.canvasBounds.Min.Add(size)
+	c.SetBounds(c.bounds)
 }
 
-func (c *Canvas) SetBounds(rect image.Rectangle) {
-	c.setBounds(rect)
-	c.resizeChildren()
+func (c *Canvas) SetRect(rect image.Rectangle) {
+	c.canvasBounds = rect
+	c.SetBounds(c.bounds)
+}
+
+func (c *Canvas) SetBounds(bounds Bounds) {
+	c.dirtyBounds = true
 }
 
 func (c *Canvas) ShouldDraw() bool {
-	return c.dirtyBounds || c.ContainerBase.isDirty()
+	return c.dirtyBounds || c.ContainerBase.ShouldDraw()
 }
 
 func (c *Canvas) Draw() {
+	if c.dirtyBounds {
+		c.resizeChildren()
+	}
+
 	c.ContainerBase.Draw()
-	c.clearFlags()
+	c.ClearFlags()
 }
 
-func (c *Canvas) clearFlags() {
+func (c *Canvas) ClearFlags() {
 	c.dirtyBounds = false
 }
 
 func (c *Canvas) resizeChildren() {
+	// Recalculate size in relation to the root
+
+	// Get resolution
+	res := c.Root().Bounds().Size
+	// Convert from absolute to relative bounds
+	relbounds := BoundsFromRect(c.canvasBounds).Scale(res.Inverse())
+
+	// Apply to each children
 	for _, child := range c.children {
-		child.setBounds(c.bounds)
+		child.SetBounds(relbounds)
 	}
 }

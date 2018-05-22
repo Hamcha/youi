@@ -30,17 +30,13 @@ func (c *ContainerBase) Children() ComponentList {
 
 func (c *ContainerBase) drawChildren() {
 	for _, child := range c.children {
-		if child.ShouldDraw() {
-			child.Draw()
-		}
+		//if child.ShouldDraw() {
+		child.Draw()
+		//}
 	}
 }
 
-func (c *ContainerBase) isDirty() bool {
-	return c.dirtyChildren
-}
-
-func (c *ContainerBase) clearFlags() {
+func (c *ContainerBase) ClearFlags() {
 	c.dirtyChildren = false
 }
 
@@ -51,13 +47,17 @@ func (c *ContainerBase) Root() Container {
 	return c.parent.Root()
 }
 
+func (c *ContainerBase) isRoot() bool {
+	return c.parent == nil
+}
+
 func (c *ContainerBase) ShouldDraw() bool {
-	return c.isDirty()
+	return c.dirtyChildren
 }
 
 func (c *ContainerBase) Draw() {
 	c.drawChildren()
-	c.clearFlags()
+	c.ClearFlags()
 }
 
 // AppendChild adds a component at the end of the list

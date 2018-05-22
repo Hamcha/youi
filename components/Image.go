@@ -54,9 +54,9 @@ func (i *Image) Draw() {
 
 	i.ComponentDrawable.Draw()
 
-	i.clearFlags()
+	i.ClearFlags()
 }
 
-func (i *Image) clearFlags() {
+func (i *Image) ClearFlags() {
 	i.dirtyContent = false
 }
