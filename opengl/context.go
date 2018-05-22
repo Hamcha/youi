@@ -7,6 +7,7 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
+// SYSDPI is the default (and currently fixed) DPI setting
 const SYSDPI = 72 //TODO Support customizable DPI
 
 // Init initializes an OpenGL context
@@ -21,6 +22,7 @@ func Init() error {
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 	glfw.WindowHint(glfw.DoubleBuffer, glfw.True)
+	glfw.WindowHint(glfw.OpenGLDebugContext, glfw.True)
 
 	return nil
 }
@@ -41,6 +43,7 @@ func Clear() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 }
 
+// Poll polls for events and updates all glfw functions
 func Poll() {
 	glfw.PollEvents()
 }
