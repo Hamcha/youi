@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/draw"
+	"image/png"
+	"os"
 	"runtime"
 
 	"github.com/hamcha/youi"
@@ -26,6 +29,7 @@ func main() {
 	window, err := opengl.CreateWindow(640, 480, "Hello world", nil, nil, opengl.WindowOptions{
 		BackgroundColor: youi.HexColor(0x101020ff),
 		Resizable:       true,
+		DebugContext:    true,
 	})
 	if err != nil {
 		panic(err)
@@ -35,8 +39,14 @@ func main() {
 	//label.SetFontSize(12)
 	//label.SetText("Hello world")
 
-	imgdata := image.NewRGBA(image.Rect(0, 0, 10, 10))
-	draw.Draw(imgdata, imgdata.Bounds(), &image.Uniform{youi.HexColor(0x00ff00ff)}, image.ZP, draw.Src)
+	imgfile, _ := os.Open("out.png")
+	imghelo, _ := png.Decode(imgfile)
+
+	imgdata := image.NewRGBA(imghelo.Bounds())
+	if imgdata.Stride != imgdata.Rect.Size().X*4 {
+		panic(fmt.Errorf("unsupported stride"))
+	}
+	draw.Draw(imgdata, imgdata.Bounds(), imghelo, image.ZP, draw.Src)
 
 	img := components.Image{}
 	img.SetImage(imgdata)
@@ -44,7 +54,7 @@ func main() {
 	canvas := components.Canvas{}
 	//canvas.AppendChild(&label)
 	canvas.AppendChild(&img)
-	canvas.SetBounds(image.Rect(10, 10, 100, 100))
+	canvas.SetRect(image.Rect(10, 10, 110, 110))
 
 	form := youi.MakeForm(window)
 	form.Root.AppendChild(&canvas)
