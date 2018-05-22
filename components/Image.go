@@ -6,6 +6,16 @@ import (
 	"github.com/hamcha/youi/opengl"
 )
 
+const imageFragShader = `
+#version 330 core
+uniform sampler2D imgdata;
+in vec2 fragTexCoord;
+out vec4 color;
+void main() {
+	color = texture(imgdata, fragTexCoord);
+}
+` + "\x00"
+
 // Image is a simple box that can contain an image or any sort of drawable surface
 type Image struct {
 	ComponentDrawable
@@ -25,6 +35,13 @@ func (i *Image) ShouldDraw() bool {
 }
 
 func (i *Image) Draw() {
+	if i.shader == nil {
+		i.shader = opengl.DefaultShader()
+		err := i.shader.SetFragmentSource(imageFragShader)
+		if err != nil {
+			panic(err)
+		}
+	}
 	if i.dirtyContent {
 		i.texture = opengl.MakeTexture(i.content, opengl.TextureOptions{
 			WrapS:     opengl.TextureWrapClamp,
@@ -32,6 +49,7 @@ func (i *Image) Draw() {
 			MinFilter: opengl.TextureFilterLinear,
 			MagFilter: opengl.TextureFilterLinear,
 		})
+		i.shader.GetUniform("imgdata").Set(i.texture)
 	}
 
 	i.ComponentDrawable.Draw()
