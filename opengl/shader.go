@@ -157,6 +157,12 @@ func (s *Shader) compileProgram() error {
 		return fmt.Errorf("link failed: %v", log)
 	}
 
+	// Reset all uniforms
+	for uname := range s.uniforms {
+		s.uniforms[uname].id = -1
+		s.uniforms[uname].program = s.programID
+	}
+
 	return nil
 }
 
@@ -242,22 +248,19 @@ func (s *Shader) GetUniform(str string) *Uniform {
 	if uid, ok := s.uniforms[str]; ok {
 		return uid
 	}
-
-	uniform := gl.GetUniformLocation(s.MustGetProgram(), glString(str))
-	if uniform < 0 {
-		panic(fmt.Errorf("glGetUniformLocation returned -1, GL error: %d", gl.GetError()))
-	}
-
 	s.uniforms[str] = &Uniform{
-		id: uniform,
+		name:    str,
+		program: s.programID,
 	}
 	return s.uniforms[str]
 }
 
 // Uniform is a modifiable input for shaders
 type Uniform struct {
-	id    int32
-	value interface{}
+	name    string
+	id      int32
+	program uint32
+	value   interface{}
 }
 
 // Set sets the value for the uniform that will applied when bound
@@ -267,6 +270,12 @@ func (u *Uniform) Set(value interface{}) {
 
 // Bind binds the current value to the current program
 func (u *Uniform) Bind() {
+	if u.id < 0 {
+		u.id = gl.GetUniformLocation(u.program, glString(u.name))
+		if u.id < 0 {
+			panic(fmt.Errorf("glGetUniformLocation returned -1, GL error: %d", gl.GetError()))
+		}
+	}
 	switch value := u.value.(type) {
 	case uint32:
 		gl.Uniform1ui(u.id, value)
