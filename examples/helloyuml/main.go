@@ -7,6 +7,7 @@ import (
 	"image/png"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/hamcha/youi"
 	"github.com/hamcha/youi/opengl"
@@ -34,10 +35,6 @@ func main() {
 		panic(err)
 	}
 
-	//label := components.Label{}
-	//label.SetFontSize(12)
-	//label.SetText("Hello world")
-
 	imgfile, _ := os.Open("out.png")
 	imghelo, _ := png.Decode(imgfile)
 
@@ -47,15 +44,14 @@ func main() {
 	}
 	draw.Draw(imgdata, imgdata.Bounds(), imghelo, image.ZP, draw.Src)
 
-	yumlcode := `
-<Page xmlns="https://yuml.ovo.ovh/schema/components/1.0">
-	<Canvas X="10" Y="10" Width="100" Height="100">
-		<Image src="out.png" />
-	</Canvas>
-</Page>
-	`
 	form := youi.MakeForm(window)
-	form.LoadYUML(yumlcode)
+	form.LoadYUML(strings.NewReader(`
+		<Page xmlns="https://yuml.ovo.ovh/schema/components/1.0">
+			<Canvas X="10" Y="10" Width="100" Height="100">
+				<Image src="out.png" />
+			</Canvas>
+		</Page>
+	`))
 
 	for window.IsOpen() {
 		if form.Root.ShouldDraw() {

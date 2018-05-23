@@ -2,6 +2,7 @@ package youi
 
 import (
 	"image"
+	"io"
 
 	"github.com/hamcha/youi/opengl"
 )
@@ -33,4 +34,20 @@ func (f *Form) Draw() {
 
 func (f *Form) onResize(width, height int) {
 	f.Root.SetSize(image.Point{width, height})
+}
+
+func (f *Form) LoadYUML(reader io.Reader) error {
+	element, err := parseYUML(reader)
+	if err != nil {
+		return err
+	}
+
+	current := f.Root
+
+	elem, err := makeComponent(element.Name.Space, element.Name.Local)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
