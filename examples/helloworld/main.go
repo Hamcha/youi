@@ -9,8 +9,9 @@ import (
 	"runtime"
 
 	"github.com/hamcha/youi"
-	"github.com/hamcha/youi/components"
+	"github.com/hamcha/youi/components/builtin"
 	"github.com/hamcha/youi/opengl"
+	"github.com/hamcha/youi/utils"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func main() {
 	defer opengl.Terminate()
 
 	window, err := opengl.CreateWindow(640, 480, "Hello world", nil, nil, opengl.WindowOptions{
-		BackgroundColor: youi.HexColor(0x101020ff),
+		BackgroundColor: utils.HexColor(0x101020ff),
 		Resizable:       true,
 		DebugContext:    true,
 	})
@@ -48,10 +49,10 @@ func main() {
 	}
 	draw.Draw(imgdata, imgdata.Bounds(), imghelo, image.ZP, draw.Src)
 
-	img := components.Image{}
+	img := builtin.Image{}
 	img.SetImage(imgdata)
 
-	canvas := components.Canvas{}
+	canvas := builtin.Canvas{}
 	//canvas.AppendChild(&label)
 	canvas.AppendChild(&img)
 	canvas.SetRect(image.Rect(10, 10, 110, 110))

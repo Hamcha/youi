@@ -27,7 +27,7 @@ func TestParseYUMLSimple(t *testing.T) {
 	// Check generated tree
 	if out.String() != expected {
 		t.Error("generated tree doesn't match expected result")
-		fmt.Printf("Expected:\n%s\n\nGot:\n%s", expected, out)
+		fmt.Printf("Expected:\n%s\n\nGot:\n%s\n\n", expected, out)
 		return
 	}
 }

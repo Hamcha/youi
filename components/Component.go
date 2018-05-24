@@ -1,36 +1,57 @@
 package components
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/go-gl/mathgl/mgl32"
 
 	"github.com/hamcha/youi/font"
 	"github.com/hamcha/youi/opengl"
+	"github.com/hamcha/youi/utils"
 )
 
-// Component is a renderable UI component
+// Component is a renderable UI component that can optionally hold children
 type Component interface {
 	Draw()
 	ShouldDraw() bool
-	Parent() Container
+
 	Bounds() Bounds
 	SetBounds(Bounds)
 
-	setParent(Container)
+	Parent() Component
+	Children() ComponentList
+	Root() Component
+
+	AppendChild(Component)
+	InsertChild(Component, int) error
+	PrependChild(Component)
+	RemoveChild(Component) error
+	FindChildIndex(Component) int
+	RemoveChildByIndex(int) error
+
+	setParent(Component)
 }
 
 // ComponentBase is the common parent of all components
 type ComponentBase struct {
-	parent Container
-	bounds Bounds
+	parent Component
 
+	bounds      Bounds
 	dirtyBounds bool
+
+	children      ComponentList
+	dirtyChildren bool
 }
 
-func (c *ComponentBase) Parent() Container {
+// ComponentList is a modifiable, ordered list of components
+type ComponentList []Component
+
+func (c *ComponentBase) Parent() Component {
 	return c.parent
 }
 
-func (c *ComponentBase) setParent(container Container) {
+func (c *ComponentBase) setParent(container Component) {
 	c.parent = container
 }
 
@@ -44,11 +65,12 @@ func (c *ComponentBase) Bounds() Bounds {
 }
 
 func (c *ComponentBase) Draw() {
+	c.drawChildren()
 	c.ClearFlags()
 }
 
 func (c *ComponentBase) ShouldDraw() bool {
-	return c.dirtyBounds
+	return c.dirtyBounds || c.dirtyChildren
 }
 
 func (c *ComponentBase) SetRedraw() {
@@ -56,15 +78,98 @@ func (c *ComponentBase) SetRedraw() {
 }
 
 func (c *ComponentBase) ClearFlags() {
+	c.dirtyChildren = false
 	c.dirtyBounds = false
 }
 
-func (c *ComponentBase) root() Container {
+// Children returns the list of all children components
+func (c *ComponentBase) Children() ComponentList {
+	return c.children
+}
+
+func (c *ComponentBase) drawChildren() {
+	for _, child := range c.children {
+		//if child.ShouldDraw() {
+		child.Draw()
+		//}
+	}
+}
+
+func (c *ComponentBase) Root() Component {
+	if c.parent == nil {
+		return c
+	}
 	return c.parent.Root()
 }
 
-// componentText is a common parent of all text-based components
-type componentText struct {
+func (c *ComponentBase) isRoot() bool {
+	return c.parent == nil
+}
+
+// AppendChild adds a component at the end of the list
+func (c *ComponentBase) AppendChild(component Component) {
+	c.children = append(c.children, component)
+	component.setParent(c)
+	c.dirtyChildren = true
+}
+
+// InsertChild inserts a component in one index of the list, moving all other components forward
+func (c *ComponentBase) InsertChild(component Component, index int) error {
+	if index < 0 || index >= len(c.children) {
+		return ErrIndexOutOfBounds
+	}
+	c.children = append(c.children[:index], append(ComponentList{component}, c.children[index:]...)...)
+	component.setParent(c)
+	c.dirtyChildren = true
+	return nil
+}
+
+// PrependChild inserts a component at the beginning of the list
+func (c *ComponentBase) PrependChild(component Component) {
+	c.children = append(ComponentList{component}, c.children...)
+	component.setParent(c)
+	c.dirtyChildren = true
+}
+
+// RemoveChild removes a component from the list
+func (c *ComponentBase) RemoveChild(component Component) error {
+	id := c.FindChildIndex(component)
+	if id < 0 {
+		return ErrComponentNotFound
+	}
+	return c.RemoveChildByIndex(id)
+}
+
+// FindChildIndex finds a component's index in the list
+func (c *ComponentBase) FindChildIndex(component Component) int {
+	for i, cmp := range c.children {
+		if cmp == component {
+			return i
+		}
+	}
+	return -1
+}
+
+// RemoveChildByIndex removes the ith component from the list
+func (c *ComponentBase) RemoveChildByIndex(i int) error {
+	if i < 0 || i >= len(c.children) {
+		return ErrIndexOutOfBounds
+	}
+	c.children = append(c.children[:i], c.children[i+1:]...)
+	c.dirtyChildren = true
+	return nil
+}
+
+// ChildrenStr calls String() on each children and indents the results
+func (c *ComponentBase) ChildrenStr() (out string) {
+	for _, child := range c.children {
+		out += utils.IndentStrings(fmt.Sprint(child), 1) + "\n"
+	}
+	return
+}
+
+// ComponentText is a common parent of all text-based components
+type ComponentText struct {
 	fontFace string
 	fontSize float64
 
@@ -72,16 +177,16 @@ type componentText struct {
 	dirtyFont bool
 }
 
-func (c *componentText) SetFontFace(name string) {
+func (c *ComponentText) SetFontFace(name string) {
 	c.fontFace = name
 	c.dirtyFont = true
 }
 
-func (c *componentText) SetFontSize(size float64) {
+func (c *ComponentText) SetFontSize(size float64) {
 	c.fontSize = size
 }
 
-func (c *componentText) makeFace() {
+func (c *ComponentText) makeFace() {
 	// If no font is provided, use Go Regolar
 	if c.fontFace == "" {
 		c._font = font.DefaultFont()
@@ -95,15 +200,15 @@ func (c *componentText) makeFace() {
 	}
 }
 
-func (c *componentText) ShouldDraw() bool {
+func (c *ComponentText) ShouldDraw() bool {
 	return c.dirtyFont
 }
 
-func (c *componentText) ClearFlags() {
+func (c *ComponentText) ClearFlags() {
 	c.dirtyFont = false
 }
 
-func (c *componentText) Draw() {
+func (c *ComponentText) Draw() {
 	if c.dirtyFont {
 		c.makeFace()
 		c.ClearFlags()
@@ -112,16 +217,16 @@ func (c *componentText) Draw() {
 
 type ComponentDrawable struct {
 	ComponentBase
-	quad   *opengl.Quad
-	shader *opengl.Shader
+	Quad   *opengl.Quad
+	Shader *opengl.Shader
 }
 
 func (c *ComponentDrawable) Draw() {
-	if c.shader == nil {
-		c.shader = opengl.DefaultShader()
+	if c.Shader == nil {
+		c.Shader = opengl.DefaultShader()
 	}
-	if c.quad == nil {
-		c.quad = opengl.MakeQuad(c.shader)
+	if c.Quad == nil {
+		c.Quad = opengl.MakeQuad(c.Shader)
 	}
 
 	// Check if bounds have changed
@@ -130,7 +235,7 @@ func (c *ComponentDrawable) Draw() {
 		c.updateTransformMatrix()
 	}
 
-	c.quad.Draw()
+	c.Quad.Draw()
 	c.ComponentBase.Draw()
 }
 
@@ -152,5 +257,11 @@ func (c *ComponentDrawable) updateTransformMatrix() {
 	result := posMtx.Mul4(sizeMtx)
 
 	// Set result matrix as uniform value
-	c.shader.GetUniform("transform").Set(result)
+	c.Shader.GetUniform("transform").Set(result)
 }
+
+// Component handling errors
+var (
+	ErrIndexOutOfBounds  = errors.New("index out of bounds")
+	ErrComponentNotFound = errors.New("component not found in list")
+)

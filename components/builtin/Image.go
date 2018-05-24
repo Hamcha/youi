@@ -1,8 +1,9 @@
-package components
+package builtin
 
 import (
 	"image"
 
+	"github.com/hamcha/youi/components"
 	"github.com/hamcha/youi/opengl"
 )
 
@@ -18,7 +19,7 @@ void main() {
 
 // Image is a simple box that can contain an image or any sort of drawable surface
 type Image struct {
-	ComponentDrawable
+	components.ComponentDrawable
 
 	content      *image.RGBA
 	dirtyContent bool
@@ -35,9 +36,9 @@ func (i *Image) ShouldDraw() bool {
 }
 
 func (i *Image) Draw() {
-	if i.shader == nil {
-		i.shader = opengl.DefaultShader()
-		err := i.shader.SetFragmentSource(imageFragShader)
+	if i.Shader == nil {
+		i.Shader = opengl.DefaultShader()
+		err := i.Shader.SetFragmentSource(imageFragShader)
 		if err != nil {
 			panic(err)
 		}
@@ -49,7 +50,7 @@ func (i *Image) Draw() {
 			MinFilter: opengl.TextureFilterLinear,
 			MagFilter: opengl.TextureFilterLinear,
 		})
-		i.shader.GetUniform("imgdata").Set(i.texture)
+		i.Shader.GetUniform("imgdata").Set(i.texture)
 	}
 
 	i.ComponentDrawable.Draw()
@@ -59,4 +60,14 @@ func (i *Image) Draw() {
 
 func (i *Image) ClearFlags() {
 	i.dirtyContent = false
+}
+
+func (i *Image) String() string {
+	//TODO Add attributes
+	return "<Image />"
+}
+
+func makeImage(list components.AttributeList) (components.Component, error) {
+	//TODO Parse attributes
+	return &Image{}, nil
 }

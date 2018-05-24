@@ -2,15 +2,18 @@ package youi
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/kataras/go-errors"
+
+	"github.com/hamcha/youi/components"
 )
 
 type yumlElement struct {
 	Name       xml.Name
-	Attributes []xml.Attr
+	Attributes yumlAttributes
 	Children   []yumlChild
 	Content    []byte
 }
@@ -20,9 +23,12 @@ type yumlChild struct {
 	Settings []xml.Attr
 }
 
+type yumlAttributes []xml.Attr
+
 // YUML errors
 var (
-	ErrIncompleteYuml = errors.New("Incomplete YUML tree")
+	ErrIncompleteYuml      = errors.New("Incomplete YUML tree")
+	ErrCouldNotMakeElement = errors.New("Could not make element \"%s\"")
 )
 
 func parseYUML(reader io.Reader) (*yumlElement, error) {
@@ -46,7 +52,7 @@ func parseYUML(reader io.Reader) (*yumlElement, error) {
 			}
 			current = &yumlElement{
 				Name:       v.Name,
-				Attributes: v.Attr,
+				Attributes: yumlAttributes(v.Attr),
 			}
 			if len(scope) > 0 {
 				parent := scope[len(scope)-1]
@@ -75,6 +81,24 @@ func parseYUML(reader io.Reader) (*yumlElement, error) {
 	return nil, ErrIncompleteYuml
 }
 
+func makeYUMLcomponentTree(element *yumlElement) (components.Component, error) {
+	elem, err := makeComponent(element.Name.Space, element.Name.Local, element.Attributes.AttributeList())
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for children
+	for _, child := range element.Children {
+		childelem, err := makeYUMLcomponentTree(child.Element)
+		if err != nil {
+			return nil, ErrCouldNotMakeElement.Format(element.Name.Local).AppendErr(err)
+		}
+		elem.AppendChild(childelem)
+	}
+
+	return elem, nil
+}
+
 func (y yumlElement) String() string {
 	args := []string{}
 	for _, arg := range y.Attributes {
@@ -90,4 +114,12 @@ func (y yumlElement) String() string {
 		out += fmt.Sprintf("  %c %s\n", symbol, childindent)
 	}
 	return strings.TrimSpace(out)
+}
+
+func (y yumlAttributes) AttributeList() components.AttributeList {
+	out := make(components.AttributeList)
+	for _, attr := range y {
+		out[attr.Name.Local] = components.Attribute(attr.Value)
+	}
+	return out
 }

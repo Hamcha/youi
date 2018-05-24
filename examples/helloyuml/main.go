@@ -11,6 +11,7 @@ import (
 
 	"github.com/hamcha/youi"
 	"github.com/hamcha/youi/opengl"
+	"github.com/hamcha/youi/utils"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func main() {
 	defer opengl.Terminate()
 
 	window, err := opengl.CreateWindow(640, 480, "Hello world", nil, nil, opengl.WindowOptions{
-		BackgroundColor: youi.HexColor(0x101020ff),
+		BackgroundColor: utils.HexColor(0x101020ff),
 		Resizable:       true,
 		DebugContext:    true,
 	})
@@ -44,14 +45,19 @@ func main() {
 	}
 	draw.Draw(imgdata, imgdata.Bounds(), imghelo, image.ZP, draw.Src)
 
+	const src = `<Page xmlns="https://yuml.ovo.ovh/schema/components/1.0">
+	<Canvas X="10" Y="10" Width="100" Height="100">
+		<Image src="out.png" />
+	</Canvas>
+</Page>`
+
 	form := youi.MakeForm(window)
-	form.LoadYUML(strings.NewReader(`
-		<Page xmlns="https://yuml.ovo.ovh/schema/components/1.0">
-			<Canvas X="10" Y="10" Width="100" Height="100">
-				<Image src="out.png" />
-			</Canvas>
-		</Page>
-	`))
+	err = form.LoadYUML(strings.NewReader(src))
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Source:\n%s\n\nResult:\n%s\n", src, form.Root)
 
 	for window.IsOpen() {
 		if form.Root.ShouldDraw() {

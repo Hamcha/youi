@@ -1,4 +1,4 @@
-package youi
+package utils
 
 // HexColor is a single 8bpc color from a single hex number (similar to CSS)
 type HexColor uint32
