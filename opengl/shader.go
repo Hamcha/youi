@@ -21,6 +21,9 @@ type Shader struct {
 	fragID, vertID uint32
 	programID      uint32
 
+	vertAttrib     uint32
+	texCoordAttrib uint32
+
 	uniforms map[string]*Uniform
 
 	output *uint8
@@ -136,6 +139,7 @@ func (s *Shader) SetOutput(out string) {
 }
 
 func (s *Shader) compileProgram() error {
+
 	// Link and check status
 	gl.LinkProgram(s.programID)
 	var success int32
@@ -156,6 +160,21 @@ func (s *Shader) compileProgram() error {
 
 		return fmt.Errorf("link failed: %v", log)
 	}
+
+	// Reset attributes
+	if s.vertAttrib != 0 {
+		gl.DisableVertexAttribArray(s.vertAttrib)
+	}
+	s.vertAttrib = uint32(gl.GetAttribLocation(s.programID, glString("vert")))
+	gl.EnableVertexAttribArray(s.vertAttrib)
+	gl.VertexAttribPointer(s.vertAttrib, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
+
+	if s.texCoordAttrib != 0 {
+		gl.DisableVertexAttribArray(s.texCoordAttrib)
+	}
+	s.texCoordAttrib = uint32(gl.GetAttribLocation(s.programID, glString("vertTexCoord")))
+	gl.EnableVertexAttribArray(s.texCoordAttrib)
+	gl.VertexAttribPointer(s.texCoordAttrib, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
 
 	// Reset all uniforms
 	for uname := range s.uniforms {

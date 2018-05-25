@@ -9,16 +9,12 @@ import (
 
 type Drawable struct {
 	Base
-	Quad   *opengl.Quad
-	Shader *opengl.Shader
+	Mesh *opengl.Mesh
 }
 
 func (c *Drawable) Draw() {
-	if c.Shader == nil {
-		c.Shader = opengl.DefaultShader()
-	}
-	if c.Quad == nil {
-		c.Quad = opengl.MakeQuad(c.Shader)
+	if c.Mesh == nil {
+		c.Mesh = opengl.MakeQuad(opengl.DefaultShader())
 	}
 
 	// Check if bounds have changed
@@ -27,7 +23,7 @@ func (c *Drawable) Draw() {
 		c.updateTransformMatrix()
 	}
 
-	c.Quad.Draw()
+	c.Mesh.Draw()
 	c.Base.Draw()
 }
 
@@ -49,7 +45,7 @@ func (c *Drawable) updateTransformMatrix() {
 	result := posMtx.Mul4(sizeMtx)
 
 	// Set result matrix as uniform value
-	c.Shader.GetUniform("transform").Set(result)
+	c.Mesh.Shader.GetUniform("transform").Set(result)
 }
 
 // Component handling errors

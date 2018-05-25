@@ -51,12 +51,13 @@ func (i *Image) ShouldDraw() bool {
 }
 
 func (i *Image) Draw() {
-	if i.Shader == nil {
-		i.Shader = opengl.DefaultShader()
-		err := i.Shader.SetFragmentSource(imageFragShader)
+	if i.Mesh == nil {
+		shader := opengl.DefaultShader()
+		err := shader.SetFragmentSource(imageFragShader)
 		if err != nil {
 			panic(err)
 		}
+		i.Mesh = opengl.MakeQuad(shader)
 	}
 	if i.dirtyContent {
 		i.texture = opengl.MakeTexture(i.content, opengl.TextureOptions{
@@ -65,7 +66,7 @@ func (i *Image) Draw() {
 			MinFilter: opengl.TextureFilterLinear,
 			MagFilter: opengl.TextureFilterLinear,
 		})
-		i.Shader.GetUniform("imgdata").Set(i.texture)
+		i.Mesh.Shader.GetUniform("imgdata").Set(i.texture)
 	}
 
 	i.Drawable.Draw()
