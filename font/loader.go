@@ -7,14 +7,14 @@ import (
 	"image/draw"
 	"image/png"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"golang.org/x/image/font/gofont/goregular"
+	resources "gopkg.in/cookieo9/resources-go.v2"
 
 	"github.com/golang/freetype/truetype"
-
-	rice "github.com/GeertJohan/go.rice"
 )
 
 // Font holds the necessary data for using a font in youi
@@ -41,16 +41,13 @@ func LoadFont(fontName string) (*Font, error) {
 		return fnt, nil
 	}
 
-	// Check around (disk, embedded in binary)
-	templateBox, err := rice.FindBox("fonts")
-	if err != nil {
-		return nil, err
-	}
-
 	// Check for a prebuilt SDF texture
-	texstream, errPNG := templateBox.Open(fontName + ".png")
-	atlstream, errAtlas := templateBox.Open(fontName + ".atlas")
+	texstream, errPNG := resources.Open("fonts/" + fontName + ".png")
+	atlstream, errAtlas := resources.Open("fonts/" + fontName + ".atlas")
 	if errPNG == nil && errAtlas == nil {
+		defer texstream.Close()
+		defer atlstream.Close()
+
 		// Load PNG texture
 		teximg, err := loadPNG(texstream)
 		if err != nil {
@@ -72,10 +69,18 @@ func LoadFont(fontName string) (*Font, error) {
 	}
 
 	// Check for TTF file
-	ttffile, err := templateBox.Bytes(fontName + ".ttf")
+	ttffile, err := resources.Open("fonts/" + fontName + ".ttf")
 	if err == nil {
+		defer ttffile.Close()
+
+		// Read all bytes from file
+		ttfbytes, err := ioutil.ReadAll(ttffile)
+		if err != nil {
+			return nil, err
+		}
+
 		// Parse truetype font
-		ttf, err := truetype.Parse(ttffile)
+		ttf, err := truetype.Parse(ttfbytes)
 		if err != nil {
 			return nil, err
 		}
