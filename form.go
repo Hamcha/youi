@@ -28,7 +28,7 @@ func MakeForm(window *opengl.Window) *Form {
 		Root:   new(builtin.Page),
 		window: window,
 	}
-	form.Root.SetSize(window.GetSize())
+	form.setRootVars()
 
 	// Set resize callback
 	window.SetResizeCallback(form.onResize)
@@ -65,6 +65,7 @@ func (f *Form) LoadYUML(reader io.Reader) error {
 	if !ok {
 		return ErrYUMLRootMustBePage
 	}
+	f.setRootVars()
 	return nil
 }
 
@@ -92,4 +93,8 @@ func toAttributeList(y yuml.Attributes) components.AttributeList {
 		out[attr.Name.Local] = components.Attribute(attr.Value)
 	}
 	return out
+}
+
+func (f *Form) setRootVars() {
+	f.Root.SetSize(f.window.GetSize())
 }
