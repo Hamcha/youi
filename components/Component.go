@@ -70,6 +70,11 @@ func (c *ComponentBase) Draw() {
 }
 
 func (c *ComponentBase) ShouldDraw() bool {
+	for _, child := range c.children {
+		if child.ShouldDraw() {
+			return true
+		}
+	}
 	return c.dirtyBounds || c.dirtyChildren
 }
 

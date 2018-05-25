@@ -37,14 +37,10 @@ func (c *Canvas) SetBounds(bounds components.Bounds) {
 	c.SetRedraw()
 }
 
-func (c *Canvas) ShouldDraw() bool {
-	return c.ComponentBase.ShouldDraw()
-}
-
 func (c *Canvas) Draw() {
-	if c.ComponentBase.ShouldDraw() {
-		c.resizeChildren()
-	}
+	//if c.ComponentBase.ShouldDraw() {
+	c.resizeChildren()
+	//}
 
 	c.ComponentBase.Draw()
 }
@@ -54,6 +50,7 @@ func (c *Canvas) resizeChildren() {
 
 	// Get resolution
 	res := c.Root().Bounds().Size
+	fmt.Println(res)
 	// Convert from absolute to relative bounds
 	relbounds := components.BoundsFromRect(c.canvasBounds).Scale(res.Inverse())
 
