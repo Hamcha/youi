@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/hamcha/youi/components"
+	"github.com/hamcha/youi/loader"
 	"github.com/hamcha/youi/opengl"
 )
 
@@ -21,9 +22,23 @@ void main() {
 type Image struct {
 	components.ComponentDrawable
 
+	src          string
 	content      *image.RGBA
 	dirtyContent bool
 	texture      *opengl.Texture
+}
+
+func (i *Image) SetPath(src string) error {
+	i.src = src
+
+	// Load image, then set it
+	img, err := loader.Image(src)
+	if err != nil {
+		return err
+	}
+
+	i.SetImage(img)
+	return nil
 }
 
 func (i *Image) SetImage(img *image.RGBA) {
@@ -63,11 +78,19 @@ func (i *Image) ClearFlags() {
 }
 
 func (i *Image) String() string {
-	//TODO Add attributes
-	return "<Image />"
+	return "<Image Path=\"" + i.src + "\" />"
 }
 
 func makeImage(list components.AttributeList) (components.Component, error) {
-	//TODO Parse attributes
-	return &Image{}, nil
+	img := &Image{}
+
+	src := list.Get("Path", "")
+	if src != "" {
+		err := img.SetPath(src.String())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return img, nil
 }
