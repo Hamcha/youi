@@ -1,4 +1,4 @@
-package youi
+package yuml
 
 import (
 	"fmt"

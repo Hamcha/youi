@@ -6,12 +6,15 @@ import (
 
 	"github.com/kataras/go-errors"
 
+	"github.com/hamcha/youi/components"
 	"github.com/hamcha/youi/components/builtin"
 	"github.com/hamcha/youi/opengl"
+	"github.com/hamcha/youi/yuml"
 )
 
 var (
-	ErrYUMLRootMustBePage = errors.New("YUML root must be <Page>")
+	ErrYUMLRootMustBePage  = errors.New("YUML root must be <Page>")
+	ErrCouldNotMakeElement = errors.New("Could not make element \"%s\"")
 )
 
 type Form struct {
@@ -45,7 +48,7 @@ func (f *Form) onResize(width, height int) {
 
 func (f *Form) LoadYUML(reader io.Reader) error {
 	// Parse code
-	yumlElem, err := parseYUML(reader)
+	yumlElem, err := yuml.ParseYUML(reader)
 	if err != nil {
 		return err
 	}
@@ -63,4 +66,30 @@ func (f *Form) LoadYUML(reader io.Reader) error {
 		return ErrYUMLRootMustBePage
 	}
 	return nil
+}
+
+func makeYUMLcomponentTree(element *yuml.Element) (components.Component, error) {
+	elem, err := makeComponent(element.Name.Space, element.Name.Local, toAttributeList(element.Attributes))
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for children
+	for _, child := range element.Children {
+		childelem, err := makeYUMLcomponentTree(child.Element)
+		if err != nil {
+			return nil, ErrCouldNotMakeElement.Format(element.Name.Local).AppendErr(err)
+		}
+		elem.AppendChild(childelem)
+	}
+
+	return elem, nil
+}
+
+func toAttributeList(y yuml.Attributes) components.AttributeList {
+	out := make(components.AttributeList)
+	for _, attr := range y {
+		out[attr.Name.Local] = components.Attribute(attr.Value)
+	}
+	return out
 }

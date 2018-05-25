@@ -1,4 +1,4 @@
-package youi
+package yuml
 
 import (
 	"encoding/xml"
@@ -7,33 +7,34 @@ import (
 	"strings"
 
 	"github.com/kataras/go-errors"
-
-	"github.com/hamcha/youi/components"
 )
 
-type yumlElement struct {
+// Element contains all the data about a YUML element
+type Element struct {
 	Name       xml.Name
-	Attributes yumlAttributes
-	Children   []yumlChild
+	Attributes Attributes
+	Children   []Child
 	Content    []byte
 }
 
-type yumlChild struct {
-	Element  *yumlElement
+// Child contains a YUML element and its parent-related attributes
+type Child struct {
+	Element  *Element
 	Settings []xml.Attr
 }
 
-type yumlAttributes []xml.Attr
+// Attributes are YUML attributes (basically xml.Attr with some extra sugar)
+type Attributes []xml.Attr
 
 // YUML errors
 var (
-	ErrIncompleteYuml      = errors.New("Incomplete YUML tree")
-	ErrCouldNotMakeElement = errors.New("Could not make element \"%s\"")
+	ErrIncompleteYuml = errors.New("Incomplete YUML tree")
 )
 
-func parseYUML(reader io.Reader) (*yumlElement, error) {
-	var scope []*yumlElement
-	var current *yumlElement
+// ParseYUML tries to read YUML code and parse it as such, returning the root element
+func ParseYUML(reader io.Reader) (*Element, error) {
+	var scope []*Element
+	var current *Element
 
 	decoder := xml.NewDecoder(reader)
 	for {
@@ -50,13 +51,13 @@ func parseYUML(reader io.Reader) (*yumlElement, error) {
 			if current != nil {
 				scope = append(scope, current)
 			}
-			current = &yumlElement{
+			current = &Element{
 				Name:       v.Name,
-				Attributes: yumlAttributes(v.Attr),
+				Attributes: Attributes(v.Attr),
 			}
 			if len(scope) > 0 {
 				parent := scope[len(scope)-1]
-				parent.Children = append(parent.Children, yumlChild{
+				parent.Children = append(parent.Children, Child{
 					Element: current,
 				})
 			}
@@ -81,25 +82,7 @@ func parseYUML(reader io.Reader) (*yumlElement, error) {
 	return nil, ErrIncompleteYuml
 }
 
-func makeYUMLcomponentTree(element *yumlElement) (components.Component, error) {
-	elem, err := makeComponent(element.Name.Space, element.Name.Local, element.Attributes.AttributeList())
-	if err != nil {
-		return nil, err
-	}
-
-	// Check for children
-	for _, child := range element.Children {
-		childelem, err := makeYUMLcomponentTree(child.Element)
-		if err != nil {
-			return nil, ErrCouldNotMakeElement.Format(element.Name.Local).AppendErr(err)
-		}
-		elem.AppendChild(childelem)
-	}
-
-	return elem, nil
-}
-
-func (y yumlElement) String() string {
+func (y Element) String() string {
 	args := []string{}
 	for _, arg := range y.Attributes {
 		args = append(args, fmt.Sprintf("%s=%s", arg.Name.Local, arg.Value))
@@ -114,12 +97,4 @@ func (y yumlElement) String() string {
 		out += fmt.Sprintf("  %c %s\n", symbol, childindent)
 	}
 	return strings.TrimSpace(out)
-}
-
-func (y yumlAttributes) AttributeList() components.AttributeList {
-	out := make(components.AttributeList)
-	for _, attr := range y {
-		out[attr.Name.Local] = components.Attribute(attr.Value)
-	}
-	return out
 }
