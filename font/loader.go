@@ -4,17 +4,14 @@ import (
 	"encoding/gob"
 	"errors"
 	"image"
-	"image/draw"
 	"image/png"
-	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"golang.org/x/image/font/gofont/goregular"
-	resources "gopkg.in/cookieo9/resources-go.v2"
-
 	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/font/gofont/goregular"
+
+	"github.com/hamcha/youi/loader"
 )
 
 // Font holds the necessary data for using a font in youi
@@ -42,20 +39,21 @@ func LoadFont(fontName string) (*Font, error) {
 	}
 
 	// Check for a prebuilt SDF texture
-	texstream, errPNG := resources.Open("fonts/" + fontName + ".png")
-	atlstream, errAtlas := resources.Open("fonts/" + fontName + ".atlas")
+	texstream, errPNG := loader.Load("fonts/" + fontName + ".png")
+	atlstream, errAtlas := loader.Load("fonts/" + fontName + ".atlas")
 	if errPNG == nil && errAtlas == nil {
 		defer texstream.Close()
 		defer atlstream.Close()
 
 		// Load PNG texture
-		teximg, err := loadPNG(texstream)
+		teximg, err := texstream.Image()
 		if err != nil {
 			return nil, err
 		}
 
 		// Load Atlas
-		atlas, err := loadAtlas(atlstream)
+		var atlas Atlas
+		err = gob.NewDecoder(atlstream).Decode(&atlas)
 		if err != nil {
 			return nil, err
 		}
@@ -69,18 +67,10 @@ func LoadFont(fontName string) (*Font, error) {
 	}
 
 	// Check for TTF file
-	ttffile, err := resources.Open("fonts/" + fontName + ".ttf")
+	ttffile, err := loader.Bytes("fonts/" + fontName + ".ttf")
 	if err == nil {
-		defer ttffile.Close()
-
-		// Read all bytes from file
-		ttfbytes, err := ioutil.ReadAll(ttffile)
-		if err != nil {
-			return nil, err
-		}
-
 		// Parse truetype font
-		ttf, err := truetype.Parse(ttfbytes)
+		ttf, err := truetype.Parse(ttffile)
 		if err != nil {
 			return nil, err
 		}
@@ -146,28 +136,4 @@ func DefaultFont() *Font {
 // ClearCache removes all entries from the font cache
 func ClearCache() {
 	fonts = make(fontCache)
-}
-
-func loadPNG(read io.Reader) (*image.RGBA, error) {
-	// Decode the PNG
-	img, err := png.Decode(read)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check if it's already the correct format
-	rgba, ok := img.(*image.RGBA)
-	if !ok {
-		// Convert to RGBA
-		b := img.Bounds()
-		rgba = image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
-		draw.Draw(rgba, rgba.Bounds(), img, b.Min, draw.Src)
-	}
-
-	return rgba, nil
-}
-
-func loadAtlas(read io.Reader) (a Atlas, err error) {
-	err = gob.NewDecoder(read).Decode(&a)
-	return
 }
