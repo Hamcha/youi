@@ -16,8 +16,9 @@ import (
 
 // Font holds the necessary data for using a font in youi
 type Font struct {
-	Texture *image.RGBA
-	Atlas   Atlas
+	Texture  *image.RGBA
+	Atlas    Atlas
+	FontSize int
 }
 
 // ErrFontNotFound means any valid font formats (ttf, sdf+atlas) could not be found

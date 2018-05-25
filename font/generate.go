@@ -74,7 +74,8 @@ func MakeFont(fnt *truetype.Font, fontSize int) (*Font, error) {
 	}
 
 	return &Font{
-		Texture: dst,
-		Atlas:   fontmap,
+		Texture:  dst,
+		Atlas:    fontmap,
+		FontSize: fontSize,
 	}, nil
 }
