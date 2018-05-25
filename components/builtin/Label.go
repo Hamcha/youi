@@ -4,8 +4,8 @@ import "github.com/hamcha/youi/components"
 
 // Label is a drawable text label
 type Label struct {
-	components.ComponentDrawable
-	components.ComponentText
+	components.Base
+	components.Text
 
 	content      string
 	dirtyContent bool
@@ -21,8 +21,7 @@ func (l *Label) SetText(str string) {
 func (l *Label) Draw() {
 	//TODO
 
-	l.ComponentDrawable.Draw()
-	l.ComponentText.Draw()
+	l.Text.Draw()
 	l.ClearFlags()
 }
 
@@ -32,7 +31,7 @@ func (l *Label) ClearFlags() {
 
 // ShouldDraw returns whether the label needs to be re-drawn
 func (l *Label) ShouldDraw() bool {
-	return l.dirtyContent || l.ComponentText.ShouldDraw()
+	return l.dirtyContent || l.Text.ShouldDraw()
 }
 
 func (l *Label) String() string {

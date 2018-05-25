@@ -13,7 +13,7 @@ import (
 // so they will all overlap each other. It is therefore recommended to only put one component
 // inside a Canvas.
 type Canvas struct {
-	components.ComponentBase
+	components.Base
 
 	canvasBounds image.Rectangle
 }
@@ -38,11 +38,11 @@ func (c *Canvas) SetBounds(bounds components.Bounds) {
 }
 
 func (c *Canvas) Draw() {
-	//if c.ComponentBase.ShouldDraw() {
+	//if c.Base.ShouldDraw() {
 	c.resizeChildren()
 	//}
 
-	c.ComponentBase.Draw()
+	c.Base.Draw()
 }
 
 func (c *Canvas) resizeChildren() {

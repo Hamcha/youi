@@ -20,7 +20,7 @@ void main() {
 
 // Image is a simple box that can contain an image or any sort of drawable surface
 type Image struct {
-	components.ComponentDrawable
+	components.Drawable
 
 	src          string
 	content      *image.RGBA
@@ -47,7 +47,7 @@ func (i *Image) SetImage(img *image.RGBA) {
 }
 
 func (i *Image) ShouldDraw() bool {
-	return i.dirtyContent || i.ComponentBase.ShouldDraw()
+	return i.dirtyContent || i.Drawable.ShouldDraw()
 }
 
 func (i *Image) Draw() {
@@ -68,7 +68,7 @@ func (i *Image) Draw() {
 		i.Shader.GetUniform("imgdata").Set(i.texture)
 	}
 
-	i.ComponentDrawable.Draw()
+	i.Drawable.Draw()
 
 	i.ClearFlags()
 }

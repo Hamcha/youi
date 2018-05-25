@@ -9,7 +9,7 @@ import (
 
 // Page is a special canvas container with less checks
 type Page struct {
-	components.ComponentBase
+	components.Base
 
 	pixelBounds image.Rectangle
 }
@@ -25,12 +25,12 @@ func (r *Page) SetRect(rect image.Rectangle) {
 }
 
 func (r *Page) ShouldDraw() bool {
-	return r.ComponentBase.ShouldDraw()
+	return r.Base.ShouldDraw()
 }
 
 func (r *Page) Draw() {
 	r.resizeChildren()
-	r.ComponentBase.Draw()
+	r.Base.Draw()
 }
 
 func (r *Page) resizeChildren() {

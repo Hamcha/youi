@@ -1,11 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"image"
-	"image/draw"
-	"image/png"
-	"os"
 	"runtime"
 
 	"github.com/hamcha/youi"
@@ -36,25 +32,12 @@ func main() {
 		panic(err)
 	}
 
-	//label := components.Label{}
-	//label.SetFontSize(12)
-	//label.SetText("Hello world")
-
-	imgfile, _ := os.Open("out.png")
-	imghelo, _ := png.Decode(imgfile)
-
-	imgdata := image.NewRGBA(imghelo.Bounds())
-	if imgdata.Stride != imgdata.Rect.Size().X*4 {
-		panic(fmt.Errorf("unsupported stride"))
-	}
-	draw.Draw(imgdata, imgdata.Bounds(), imghelo, image.ZP, draw.Src)
-
-	img := builtin.Image{}
-	img.SetImage(imgdata)
+	label := builtin.Label{}
+	label.SetFontSize(12)
+	label.SetText("Hello world")
 
 	canvas := builtin.Canvas{}
-	//canvas.AppendChild(&label)
-	canvas.AppendChild(&img)
+	canvas.AppendChild(&label)
 	canvas.SetRect(image.Rect(10, 10, 110, 110))
 
 	form := youi.MakeForm(window)
