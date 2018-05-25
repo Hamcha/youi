@@ -2,16 +2,15 @@ package main
 
 import (
 	"fmt"
-	"image"
-	"image/draw"
-	"image/png"
-	"os"
 	"runtime"
 	"strings"
 
 	"github.com/hamcha/youi"
 	"github.com/hamcha/youi/opengl"
 	"github.com/hamcha/youi/utils"
+
+	// Import example data
+	_ "github.com/hamcha/youi/examples/example_data"
 )
 
 func init() {
@@ -36,18 +35,9 @@ func main() {
 		panic(err)
 	}
 
-	imgfile, _ := os.Open("out.png")
-	imghelo, _ := png.Decode(imgfile)
-
-	imgdata := image.NewRGBA(imghelo.Bounds())
-	if imgdata.Stride != imgdata.Rect.Size().X*4 {
-		panic(fmt.Errorf("unsupported stride"))
-	}
-	draw.Draw(imgdata, imgdata.Bounds(), imghelo, image.ZP, draw.Src)
-
 	const src = `<Page xmlns="https://yuml.ovo.ovh/schema/components/1.0">
 	<Canvas X="10" Y="10" Width="100" Height="100">
-		<Image src="out.png" />
+		<Image Path="images/hello.png" />
 	</Canvas>
 </Page>`
 
