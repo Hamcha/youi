@@ -1,7 +1,6 @@
 package loader
 
 import (
-	"fmt"
 	"image"
 	"io"
 	"os"
@@ -22,7 +21,6 @@ func init() {
 
 // Open wraps resources.Open so it uses our custom bundle instead of the default one
 func Open(path string) (io.ReadCloser, error) {
-	fmt.Printf("Looking for \"%s\"\n", path)
 	err := resources.CheckPath(path)
 	if err != nil {
 		return nil, err
