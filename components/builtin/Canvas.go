@@ -50,7 +50,7 @@ func (c *Canvas) resizeChildren() {
 
 	// Get resolution
 	res := c.Root().Bounds().Size
-	fmt.Println(res)
+
 	// Convert from absolute to relative bounds
 	relbounds := components.BoundsFromRect(c.canvasBounds).Scale(res.Inverse())
 
