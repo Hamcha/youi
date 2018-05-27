@@ -4,22 +4,25 @@ import "github.com/go-gl/gl/v3.3-core/gl"
 
 // Mesh is a mesh that can be drawn
 type Mesh struct {
-	vertices []float32
-	vao      uint32
-	vbo      uint32
-	Shader   *Shader
+	vertices  []float32
+	vao       uint32
+	vbo       uint32
+	Shader    *Shader
+	ownshader bool
 }
 
 // MakeMesh creates a mesh with given vertices and an optional shader
 func MakeMesh(vertices []float32, shader *Shader) *Mesh {
-	// Fallback to default shader if not specified
-	if shader == nil {
-		shader = DefaultShader()
-	}
 
 	mesh := new(Mesh)
-	mesh.Shader = shader
 	mesh.vertices = vertices
+
+	mesh.Shader = shader
+	if mesh.Shader == nil {
+		// Fall back to default shader if not specified
+		mesh.Shader = DefaultShader()
+		mesh.ownshader = true // Since we use a custom shader instance we should also clear it
+	}
 
 	// Generate vertex array object
 	gl.GenVertexArrays(1, &mesh.vao)
@@ -31,6 +34,21 @@ func MakeMesh(vertices []float32, shader *Shader) *Mesh {
 	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
 
 	return mesh
+}
+
+// Destroy cleans up all used resources from Mesh
+func (m *Mesh) Destroy() {
+	if m.ownshader {
+		m.Shader.Destroy()
+	}
+
+	gl.BindVertexArray(m.vao)
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+	gl.DeleteBuffers(1, &m.vbo)
+
+	gl.BindVertexArray(0)
+	gl.DeleteVertexArrays(1, &m.vao)
 }
 
 // Draw sets the quad's shader and draws it

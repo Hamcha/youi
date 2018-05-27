@@ -39,14 +39,7 @@ func MakeShader() *Shader {
 // SetFragmentSource sets (and updates) the fragment portion of the shader
 func (s *Shader) SetFragmentSource(src string) (err error) {
 	// Do some cleanup if we're replacing an existing shader
-	if s.fragID != 0 {
-		// Already in a program? Detach
-		if s.programID != 0 {
-			gl.DetachShader(s.programID, s.fragID)
-		}
-		// Delete old shader
-		gl.DeleteShader(s.fragID)
-	}
+	s.destroyFragmentShader()
 
 	// Set new shader
 	s.fragID, err = setShader(src, gl.FRAGMENT_SHADER)
@@ -63,14 +56,7 @@ func (s *Shader) SetFragmentSource(src string) (err error) {
 // SetVertexSource sets (and updates) the vertex portion of the shader
 func (s *Shader) SetVertexSource(src string) (err error) {
 	// Do some cleanup if we're replacing an existing shader
-	if s.vertID != 0 {
-		// Already in a program? Detach
-		if s.programID != 0 {
-			gl.DetachShader(s.programID, s.vertID)
-		}
-		// Delete old shader
-		gl.DeleteShader(s.vertID)
-	}
+	s.destroyVertexShader()
 
 	// Set new shader
 	s.vertID, err = setShader(src, gl.VERTEX_SHADER)
@@ -138,8 +124,41 @@ func (s *Shader) SetOutput(out string) {
 	s.output = glString(out)
 }
 
-func (s *Shader) compileProgram() error {
+// Destroy frees up the resources used by the shader and makes it unusable
+func (s *Shader) Destroy() {
+	s.destroyVertexShader()
+	s.destroyFragmentShader()
+	if s.programID != 0 {
+		gl.DeleteProgram(s.programID)
+		s.programID = 0
+	}
+}
 
+func (s *Shader) destroyVertexShader() {
+	if s.vertID != 0 {
+		// Already in a program? Detach
+		if s.programID != 0 {
+			gl.DetachShader(s.programID, s.vertID)
+		}
+		// Delete old shader
+		gl.DeleteShader(s.vertID)
+		s.vertID = 0
+	}
+}
+
+func (s *Shader) destroyFragmentShader() {
+	if s.fragID != 0 {
+		// Already in a program? Detach
+		if s.programID != 0 {
+			gl.DetachShader(s.programID, s.fragID)
+		}
+		// Delete old shader
+		gl.DeleteShader(s.fragID)
+		s.fragID = 0
+	}
+}
+
+func (s *Shader) compileProgram() error {
 	// Link and check status
 	gl.LinkProgram(s.programID)
 	var success int32
