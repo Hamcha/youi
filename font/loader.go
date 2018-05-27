@@ -1,12 +1,8 @@
 package font
 
 import (
-	"encoding/gob"
 	"errors"
 	"image"
-	"image/png"
-	"os"
-	"path/filepath"
 
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font/gofont/goregular"
@@ -16,9 +12,10 @@ import (
 
 // Font holds the necessary data for using a font in youi
 type Font struct {
-	Texture  *image.RGBA
-	Atlas    Atlas
-	FontSize int
+	Texture *image.RGBA
+	Atlas   Atlas
+	Size    int
+	TTF     *truetype.Font
 }
 
 // ErrFontNotFound means any valid font formats (ttf, sdf+atlas) could not be found
@@ -39,34 +36,6 @@ func LoadFont(fontName string) (*Font, error) {
 		return fnt, nil
 	}
 
-	// Check for a prebuilt SDF texture
-	texstream, errPNG := loader.Load("fonts/" + fontName + ".png")
-	atlstream, errAtlas := loader.Load("fonts/" + fontName + ".atlas")
-	if errPNG == nil && errAtlas == nil {
-		defer texstream.Close()
-		defer atlstream.Close()
-
-		// Load PNG texture
-		teximg, err := texstream.Image()
-		if err != nil {
-			return nil, err
-		}
-
-		// Load Atlas
-		var atlas Atlas
-		err = gob.NewDecoder(atlstream).Decode(&atlas)
-		if err != nil {
-			return nil, err
-		}
-
-		// Save to cache
-		fonts[fontName] = &Font{
-			Texture: teximg,
-			Atlas:   atlas,
-		}
-		return fonts[fontName], nil
-	}
-
 	// Check for TTF file
 	ttffile, err := loader.Bytes("fonts/" + fontName + ".ttf")
 	if err == nil {
@@ -82,36 +51,6 @@ func LoadFont(fontName string) (*Font, error) {
 	}
 
 	return nil, ErrFontNotFound
-}
-
-// Export saves the font texture and atlas to disk
-func (f *Font) Export(directory, name string) error {
-	// Save font texture (to PNG)
-	texfile, err := os.Create(filepath.Join(directory, name+".png"))
-	if err != nil {
-		return err
-	}
-
-	err = png.Encode(texfile, f.Texture)
-	if err != nil {
-		return err
-	}
-
-	texfile.Close()
-
-	// Save font atlas (to gob)
-	atlfile, err := os.Create(filepath.Join(directory, name+".atlas"))
-	if err != nil {
-		return err
-	}
-
-	err = gob.NewEncoder(atlfile).Encode(f.Atlas)
-	if err != nil {
-		return err
-	}
-
-	// All done!
-	return nil
 }
 
 // DefaultFont loads (and generate, if necessary) the default font for youi (goregular)
