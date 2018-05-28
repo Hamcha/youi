@@ -28,4 +28,4 @@ This project depends on third party libraries, you can see their licenses in the
 - `LICENSE-go-gl` for the [go-gl project](https://github.com/go-gl)
 - `LICENSE-ftl` for [freetype2](http://freetype.sourceforge.net/index2.html) and [Freetype-Go](https://github.com/golang/freetype)
 - `LICENSE-texpack` for [texpack](https://github.com/adinfinit/texpack)
-- `LICENSE-go-rice` for [go.rice](https://github.com/GeertJohan/go.rice)
+- `LICENSE-goresources` for [resources-go](https://github.com/cookieo9/resources-go/tree/v2.1)
