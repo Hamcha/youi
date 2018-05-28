@@ -3,6 +3,7 @@ package opengl
 import (
 	"errors"
 	"fmt"
+	"image/color"
 	"strings"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -311,7 +312,7 @@ func (u *Uniform) Bind() {
 	if u.id < 0 {
 		u.id = gl.GetUniformLocation(u.program, glString(u.name))
 		if u.id < 0 {
-			panic(fmt.Errorf("glGetUniformLocation returned -1, GL error: %d", gl.GetError()))
+			panic(fmt.Errorf("glGetUniformLocation for \"%s\" (program %d) returned -1, GL error: %d", u.name, u.program, gl.GetError()))
 		}
 	}
 	switch value := u.value.(type) {
@@ -387,6 +388,9 @@ func (u *Uniform) Bind() {
 		if err != nil {
 			panic(err)
 		}
+	case color.Color:
+		r, g, b, a := toGLColor(value)
+		gl.Uniform4f(u.id, r, g, b, a)
 	default:
 		panic(ErrUniformInvalidType)
 	}
