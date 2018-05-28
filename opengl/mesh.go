@@ -5,17 +5,20 @@ import "github.com/go-gl/gl/v3.3-core/gl"
 // Mesh is a mesh that can be drawn
 type Mesh struct {
 	vertices  []float32
+	indices   []uint32
 	vao       uint32
 	vbo       uint32
+	ebo       uint32
 	Shader    *Shader
 	ownshader bool
 }
 
 // MakeMesh creates a mesh with given vertices and an optional shader
-func MakeMesh(vertices []float32, shader *Shader) *Mesh {
+func MakeMesh(vertices []float32, indices []uint32, shader *Shader) *Mesh {
 
 	mesh := new(Mesh)
 	mesh.vertices = vertices
+	mesh.indices = indices
 
 	mesh.Shader = shader
 	if mesh.Shader == nil {
@@ -33,6 +36,11 @@ func MakeMesh(vertices []float32, shader *Shader) *Mesh {
 	gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
 	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
 
+	// Generate element buffer object
+	gl.GenBuffers(1, &mesh.ebo)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ebo)
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices)*4, gl.Ptr(indices), gl.STATIC_DRAW)
+
 	return mesh
 }
 
@@ -47,6 +55,9 @@ func (m *Mesh) Destroy() {
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.DeleteBuffers(1, &m.vbo)
 
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
+	gl.DeleteBuffers(1, &m.ebo)
+
 	gl.BindVertexArray(0)
 	gl.DeleteVertexArrays(1, &m.vao)
 }
@@ -60,25 +71,31 @@ func (m *Mesh) Draw() {
 	// Setup uniforms
 	m.Shader.BindUniforms()
 
-	// Bind VAO
+	// Bind VAO and EBO
 	gl.BindVertexArray(m.vao)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ebo)
 
 	// Draw vertices
-	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(m.vertices)/5))
+	gl.DrawElements(gl.TRIANGLES, int32(len(m.indices)), gl.UNSIGNED_INT, nil)
+
+	// Unbind VAO and EBO
+	gl.BindVertexArray(0)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
 }
 
 var quadVertices = []float32{
-	// Triangle 1
 	-1, -1, 0, 0, 1,
 	-1, 1, 0, 0, 0,
 	1, 1, 0, 1, 0,
-	// Triangle 2
-	-1, -1, 0, 0, 1,
 	1, -1, 0, 1, 1,
-	1, 1, 0, 1, 0,
+}
+
+var quadIndices = []uint32{
+	0, 1, 2,
+	0, 3, 2,
 }
 
 // MakeQuad creates a quad with either a provided shader or a default one
 func MakeQuad(shader *Shader) *Mesh {
-	return MakeMesh(quadVertices, shader)
+	return MakeMesh(quadVertices, quadIndices, shader)
 }
