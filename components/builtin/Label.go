@@ -6,15 +6,6 @@ import "github.com/hamcha/youi/components"
 type Label struct {
 	components.Base
 	components.Text
-
-	content      string
-	dirtyContent bool
-}
-
-// SetText changes the text content of the label
-func (l *Label) SetText(str string) {
-	l.content = str
-	l.dirtyContent = true
 }
 
 // Draw draws the label on screen
@@ -22,16 +13,12 @@ func (l *Label) Draw() {
 	//TODO
 
 	l.Text.Draw()
-	l.ClearFlags()
-}
-
-func (l *Label) ClearFlags() {
-	l.dirtyContent = false
+	l.Text.ClearFlags()
 }
 
 // ShouldDraw returns whether the label needs to be re-drawn
 func (l *Label) ShouldDraw() bool {
-	return l.dirtyContent || l.Text.ShouldDraw()
+	return l.Text.ShouldDraw()
 }
 
 func (l *Label) String() string {

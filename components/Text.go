@@ -1,14 +1,29 @@
 package components
 
-import "github.com/hamcha/youi/font"
+import (
+	"github.com/hamcha/youi/font"
+	"github.com/hamcha/youi/opengl"
+)
 
 // Text is a common parent of all text-based components
 type Text struct {
+	Base
+
 	fontFace string
 	fontSize float64
 
-	_font     *font.Font
+	font      *font.Font
+	text      *opengl.Text
 	dirtyFont bool
+
+	content      string
+	dirtyContent bool
+}
+
+// SetText changes the text content of the text control
+func (c *Text) SetText(str string) {
+	c.content = str
+	c.dirtyContent = true
 }
 
 func (c *Text) SetFontFace(name string) {
@@ -23,10 +38,10 @@ func (c *Text) SetFontSize(size float64) {
 func (c *Text) makeFace() {
 	// If no font is provided, use Go Regolar
 	if c.fontFace == "" {
-		c._font = font.DefaultFont()
+		c.font = font.DefaultFont()
 	} else {
 		var err error
-		c._font, err = font.LoadFont(c.fontFace)
+		c.font, err = font.LoadFont(c.fontFace)
 		if err != nil {
 			//TODO Proper error reporting
 			panic(err)
@@ -35,18 +50,30 @@ func (c *Text) makeFace() {
 }
 
 func (c *Text) ShouldDraw() bool {
-	return c.dirtyFont
+	return c.dirtyFont || c.dirtyContent
 }
 
 func (c *Text) ClearFlags() {
 	c.dirtyFont = false
+	c.dirtyContent = false
 }
 
 func (c *Text) Draw() {
-	if c.dirtyFont {
+	if c.font == nil || c.text == nil || c.dirtyFont {
 		c.makeFace()
-		c.ClearFlags()
+		c.text = opengl.MakeText(c.font, c.content)
+	} else if c.dirtyContent {
+		c.text.SetContent(c.content)
 	}
 
-	//TODO Draw font
+	// Check if bounds have changed
+	if c.dirtyBounds {
+		// Update transform matrix
+		mat := getTransformMatrix(c.bounds)
+		c.text.Shader.GetUniform("transform").Set(mat)
+	}
+
+	c.text.Mesh.Draw()
+	c.Base.Draw()
+	c.ClearFlags()
 }
