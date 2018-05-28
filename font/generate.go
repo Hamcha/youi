@@ -16,10 +16,10 @@ import (
 const MaxTextureSize = 2048
 
 // SDFRadius is the search radius for each pixel during the distance fields generation
-const SDFRadius = 4
+const SDFRadius = 8
 
 // DefaultTextureFontSize is the default size used for SDF texture generation
-const DefaultTextureFontSize = 32
+const DefaultTextureFontSize = 64
 
 var (
 	// ErrFontDoesntFit means the font glyphs don't fit within the maximum texture limit
@@ -34,7 +34,7 @@ func MakeFont(fnt *truetype.Font, fontSize int) (*Font, error) {
 	// Create new typeface with specified size
 	face := truetype.NewFace(fnt, &truetype.Options{
 		Size:    float64(fontSize),
-		Hinting: font.HintingFull,
+		Hinting: font.HintingNone,
 	})
 
 	// Create textpack font struct
