@@ -56,6 +56,8 @@ func CreateWindow(width, height int, title string, monitor *glfw.Monitor, parent
 	// Setup global properties
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LESS)
+	gl.Enable(gl.BLEND)
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
 	if options.DebugContext {
 		gl.Enable(gl.DEBUG_OUTPUT)
