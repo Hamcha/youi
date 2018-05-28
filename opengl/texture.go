@@ -19,6 +19,7 @@ type TextureOptions struct {
 	WrapR     WrapType
 	MinFilter TextureFilter
 	MagFilter TextureFilter
+	Mipmap    bool
 }
 
 // WrapType sets how a texture wraps
@@ -70,6 +71,11 @@ func MakeTexture(img *image.RGBA, options TextureOptions) *Texture {
 	}
 	if options.MagFilter != 0 {
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, int32(options.MagFilter))
+	}
+
+	// Generate mipmaps
+	if options.Mipmap {
+		gl.GenerateMipmap(gl.TEXTURE_2D)
 	}
 
 	width := int32(img.Rect.Size().X)
